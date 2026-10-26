@@ -1,42 +1,76 @@
 # Mosslight: A Little Physics Lab
 
-A no-build, no-dependency browser prototype for a cozy 2D science practical game. It starts with one experiment: timing a pendulum.
+A no-build, no-dependency browser simulator for a cozy 2D science practical game. It simulates a physics practical in a quiet greenhouse laboratory: timing a pendulum and investigating how real-world conditions affect experimental outcomes.
 
-## Run it
+## Run It
 
-1. Download and unzip the folder.
-2. Open `index.html` in a modern desktop browser (Chrome, Edge, Firefox, or Safari).
-3. Adjust the controls, then choose **Release & measure 10 periods**.
+1. Download or clone this repository.
+2. Open `index.html` (or `mosslight ver 1.html`) directly in any modern desktop browser (Chrome, Edge, Firefox, Safari).
+3. No build tools, package managers, accounts, servers, or external internet connections are required.
 
-No account, API key, package installation, or internet connection is required after the file is downloaded.
+To run via a local static web server (optional):
+```bash
+# Using Node.js
+npx serve .
+# or
+node -e "const http=require('http'),fs=require('fs'),path=require('path');http.createServer((req,res)=>{const p=path.join(__dirname,req.url==='/'?'index.html':req.url);fs.readFile(p,(err,d)=>{if(err){res.writeHead(404);res.end('Not found');}else{res.writeHead(200);res.end(d);}});}).listen(8080,()=>console.log('Server running on http://localhost:8080'));"
+```
 
 ## Controls
 
-- **Left / Right arrow** or **A / D**: move the lab assistant.
-- **E**: inspect / talk.
-- **Space**: release the pendulum and run a trial.
-- Use the sliders to change string length, release angle, bob mass, breeze, and lab disturbance.
+- **Left / Right Arrow** or **A / D**: Walk the student assistant around the greenhouse.
+- **E**: Inspect apparatus or talk with the assistant.
+- **Space**: Release the pendulum and begin timing 10 complete periods.
+- **Number Fields & Sliders**: Type exact values or drag sliders to modify experiment parameters.
+- **🎨 Customize Character**: Open the character studio wardrobe to customize appearance, clothes, and science props.
+- **▶ Audio Player**: Toggle relaxing procedural lo-fi chords and ambient greenhouse sounds.
 
-## What the model does
+## What the Model Does
 
-- Uses the pendulum equation of motion with gravity, a small damping term, a changing lateral breeze, and a simplified vibration disturbance.
-- Compares the measured period to the ideal small-angle estimate `T ≈ 2π√(L/g)` with `g = 9.81 m/s²`.
-- Adds stopwatch reaction-time uncertainty to measured data. Noise is represented as a combined simplified model of bench vibration and observer distraction. Ordinary sound alone does not normally change a pendulum's period significantly.
-- Keeps a short in-session experiment log. The log resets when the page is refreshed.
+- **Pendulum Equation of Motion**:
+  $$\frac{d^2\theta}{dt^2} = -\frac{g}{L}\sin\theta - \gamma \frac{d\theta}{dt} + \frac{a_{\text{wind}} + a_{\text{vibration}}}{L}\cos\theta$$
+- **Theoretical Small-Angle Period**:
+  $$T \approx 2\pi\sqrt{\frac{L}{g}}$$
+- **Finite-Amplitude Second-Order Correction**:
+  $$T \approx T_0 \left(1 + \frac{1}{16}\theta_0^2\right)$$
+  (Highlights the small-angle assumption when $\theta_0 > 15^\circ$).
+- **Fixed 10-Period Timing Protocol**:
+  Times 10 complete periods from release peak $t_0$ to $t_{10}$, adding realistic human stopwatch reaction uncertainty ($\pm 0.04\text{s}$ to $0.24\text{s}$ scaled by disturbance), then computes $T_{\text{measured}} = (t_{10} - t_0 + \text{reactionError}) / 10$.
+- **Mass Independence in Ideal Gravity**:
+  Bob mass cancels out in the gravitational restoring term ($\alpha = -(g/L)\sin\theta$). In the presence of air drag and cross-breeze, heavier bobs display greater aerodynamic inertia ($a = F_{\text{drag}} / m$).
+- **Planetary Gravity Presets**:
+  Quick-switch between Earth ($9.81\text{ m/s}^2$), Moon ($1.62\text{ m/s}^2$), Mars ($3.72\text{ m/s}^2$), and Jupiter ($24.79\text{ m/s}^2$).
 
-## What this is—and isn't
+## Key Features
 
-This is a playable visual prototype and a conversation starter for a larger educational game. It is not calibrated scientific equipment; the disturbance model is intentionally simplified for learning. The art is original and drawn procedurally in Canvas; it uses a cozy hand-drawn animation mood rather than copying a particular studio's characters or assets.
+1. **Dual Numerical Controls**:
+   - Every physical parameter has a linked editable number input and slider with bidirectional synchronization.
+   - User typing is never interrupted mid-input; values are validated and clamped on `Enter` or `blur`.
+   - Clear physical units: metres (`m`), degrees (`°`), grams/kilograms (`g`/`kg`), gravitational acceleration (`m/s²`), damping rate (`s⁻¹`), and wind/disturbance (`%`).
+   - Dedicated "↺ Reset Experiment" and "↺ Reset to Defaults" controls.
+2. **Modular Chibi Character & Wardrobe Studio**:
+   - Expressive 2D storybook chibi aesthetic with stepped, handmade animation.
+   - Layered modular rendering: skin tones, hairstyles, hair colours, eye colours & expressions, sweaters, bottoms, lab coats/aprons, footwear, spectacles, goggles, and handheld tools.
+   - Dynamic animation states: `idle` (breathing, blinking), `walking` (stepped 4-frame cycle), `observing` (leaning forward, taking notes), `celebrating` (raising arms with sparkle emotes when error $< 3\%$), and `reacting` (head tilt with sweat drop when error/disturbance is high).
+   - Saved locally via browser `localStorage` (`mosslight_chibi_character_v1`).
+3. **Procedural Lo-Fi Music & Ambience**:
+   - Synthesized using the native Web Audio API — zero external files or copyright issues.
+   - Warm Rhodes-style electric piano chords ($F^{\text{maj7}} \to E^{\text{m7}} \to D^{\text{m9}} \to C^{\text{maj7}}$ at 68 BPM), kalimba arpeggio plucks, and mellow sub bass.
+   - Dynamic environmental audio: greenhouse wind/breeze (scales with the wind setting), organic birdsong chirps, gentle rain, and physical interaction sound effects.
+   - Full browser autoplay compliance with tab-visibility auto-pause.
+4. **Field Notebook & Data Export**:
+   - Compares theoretical small-angle period against measured period and percentage error.
+   - Generates contextual scientific takeaways based on parameter choices.
+   - Complete trial history log with "📥 Export CSV" and "🗑️ Clear Log" options.
 
-## Recommended next milestones
+## Automated Testing
 
-1. Add a proper pause, reset-to-defaults, keyboard focus, and mobile controls.
-2. Add a projectile-motion practical using measured launch angle, initial speed, gravity, and wind resistance.
-3. Add data export (CSV), graphing, units checks, and teacher mode.
-4. Separate the physics simulation from presentation code and add automated tests against known cases.
-5. Replace procedural scenery with commissioned/original illustrated backgrounds and sprite sheets, keeping art files editable.
-6. Add save files and lesson progression only after the experiment loop is stable.
+Run the test suites with Node.js:
 
-## Codex task prompt
+```bash
+# Run unit tests (physics formulas, parameter bounds, validation, character sanitization)
+node tests/unit_tests.js
 
-> Inspect this small no-build HTML5 Canvas game before editing it. Keep the game browser-based and 2D. First list current features and bugs, then make one focused change at a time. Preserve the educational physics: the ideal simple-pendulum period is approximately `2π√(L/g)` for small angles, mass should not affect the ideal period, and sound should not be claimed to directly alter gravity. Keep rendering, physics, controls, and experiment-log code clearly separated. Test the page in a browser after every meaningful change and report exactly what you tested. Do not add accounts, servers, multiplayer, paid APIs, or a framework unless I approve it.
+# Run Chrome DevTools Protocol integration test (headless browser DOM, audio, simulation, screenshot)
+node tests/browser_test.js
+```

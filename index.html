@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4eedc">
+<title>Mosslight — A Little Physics Lab</title>
+<link rel="stylesheet" href="css/mosslight.css">
+</head>
+<body>
+<div class="shell">
+  <!-- Masthead with Branding, Customization Button, and Lo-Fi Audio Player -->
+  <header class="masthead">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">✿</div>
+      <div>
+        <div class="eyebrow">Mosslight Field School</div>
+        <h1>A Little Physics Lab</h1>
+      </div>
+    </div>
+
+    <div class="masthead-actions">
+      <!-- Wardrobe Customisation Button -->
+      <button class="btn-wardrobe" id="btnOpenWardrobe" aria-haspopup="dialog" aria-controls="wardrobeModal">
+        <span aria-hidden="true">🎨</span>
+        <span>Customize Character</span>
+      </button>
+
+      <!-- Cozy Lo-Fi Music & Ambience Toolbar -->
+      <div class="audio-player-bar" id="audioPlayerBar" role="region" aria-label="Lo-Fi audio player">
+        <button class="btn-audio-play" id="btnAudioPlay" aria-label="Play lo-fi study music" title="Play Lo-Fi Music">▶</button>
+        <div class="audio-bars" aria-hidden="true">
+          <div class="audio-bar-stem"></div>
+          <div class="audio-bar-stem"></div>
+          <div class="audio-bar-stem"></div>
+          <div class="audio-bar-stem"></div>
+        </div>
+
+        <div class="audio-group">
+          <label for="musicVolSlider">Music</label>
+          <input id="musicVolSlider" type="range" min="0" max="1" step="0.05" value="0.65" aria-label="Music volume">
+        </div>
+
+        <div class="audio-group">
+          <label for="ambienceVolSlider">Ambience</label>
+          <input id="ambienceVolSlider" type="range" min="0" max="1" step="0.05" value="0.55" aria-label="Ambience volume">
+        </div>
+
+        <select id="audioMoodSelect" class="audio-mood-select" aria-label="Atmosphere mood">
+          <option value="sunny">☀️ Sunny Lab</option>
+          <option value="rainy">🌧️ Rainy Study</option>
+          <option value="breezy">🍃 Breezy Day</option>
+        </select>
+
+        <button class="btn-audio-mute" id="btnAudioMute" aria-label="Mute all audio" title="Toggle Mute">🔊</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Field Intro Note -->
+  <div class="intro">
+    <div>
+      <div class="eyebrow">Practical 001 · Pendulum Motion & Experimental Uncertainty</div>
+      <p>Welcome to the garden laboratory. Adjust physical parameters, explore how cross-breezes and bench vibrations influence real-world measurements, and compare actual stopwatch readings with theoretical predictions.</p>
+    </div>
+    <div class="issue">FIELD NOTE No. 001</div>
+  </div>
+
+  <main>
+    <!-- Experiment Workspace -->
+    <section class="workspace" aria-label="Pendulum experiment laboratory">
+      <!-- Left Column: Canvas Scene -->
+      <article class="card scene-card">
+        <div class="scene-top">
+          <strong>THE GREENHOUSE LAB</strong>
+          <span class="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="sceneStatus">Ready when you are</span>
+          </span>
+        </div>
+
+        <canvas id="scene" width="960" height="540" aria-label="A cozy 2D greenhouse laboratory with a swinging pendulum and a customizable student assistant character"></canvas>
+
+        <div class="scene-foot">
+          <span id="characterHint">Walk over to the lab bench and press E to inspect.</span>
+          <span class="keycaps">
+            <kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> walk
+            <kbd>E</kbd> inspect
+            <kbd>Space</kbd> release & measure
+          </span>
+        </div>
+      </article>
+
+      <!-- Right Column: Experiment Controls -->
+      <article class="card control-card">
+        <div class="panel-head">
+          <div class="eyebrow">Interactive Experiment Controls</div>
+          <h2>The Pendulum Practical</h2>
+          <p class="sub">Change one variable at a time. Enter exact numbers or drag sliders to see real-time updates.</p>
+        </div>
+
+        <div class="controls-body">
+          <!-- SECTION 1: Experiment Setup & Triggers -->
+          <div class="section-header"><span>🧪</span> Experiment Setup</div>
+          <div class="action-grid">
+            <button class="btn btn-primary" id="startBtn">▶ Release & measure 10 periods</button>
+            <div class="btn-row-dual">
+              <button class="btn btn-secondary" id="resetExpBtn" title="Reset pendulum position without altering chosen parameters">↺ Reset Experiment</button>
+              <button class="btn btn-secondary" id="resetDefBtn" title="Restore all parameters to standard laboratory defaults">↺ Reset to Defaults</button>
+            </div>
+            <div class="statusline">
+              <span id="trialStatus">No trial running</span>
+              <strong id="periodCount">0 / 10</strong>
+            </div>
+          </div>
+
+          <!-- SECTION 2: Physical Parameters -->
+          <div class="section-header"><span>📐</span> Physical Parameters</div>
+
+          <!-- 1. String Length -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="lenNum">String length (L)</label>
+              <span class="readout-badge" id="lenRead">0.65 m (65 cm)</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="lenRange" type="range" min="0.10" max="2.50" step="0.01" value="0.65" aria-label="String length slider">
+              <input id="lenNum" class="num-input" type="number" min="0.10" max="2.50" step="0.01" value="0.65" aria-label="String length in metres">
+              <span class="unit-badge">m</span>
+            </div>
+            <div class="control-hint" id="lenHint">Distance from pivot to center of bob. Range: 0.10 m – 2.50 m.</div>
+          </div>
+
+          <!-- 2. Release Angle -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="angNum">Release angle (θ₀)</label>
+              <span class="readout-badge" id="angRead">15°</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="angRange" type="range" min="1" max="45" step="1" value="15" aria-label="Release angle slider">
+              <input id="angNum" class="num-input" type="number" min="1" max="45" step="1" value="15" aria-label="Release angle in degrees">
+              <span class="unit-badge">°</span>
+            </div>
+            <div class="control-hint" id="angHint">Initial displacement from vertical. Small angles (≤ 15°) best fit T ≈ 2π√(L/g).</div>
+            <div class="control-alert" id="angAlert" hidden></div>
+          </div>
+
+          <!-- 3. Bob Mass -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="massNum">Bob mass (m)</label>
+              <span class="readout-badge" id="massRead">80 g (0.080 kg)</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="massRange" type="range" min="10" max="1000" step="5" value="80" aria-label="Bob mass slider">
+              <input id="massNum" class="num-input" type="number" min="10" max="1000" step="5" value="80" aria-label="Bob mass in grams">
+              <span class="unit-badge">g</span>
+            </div>
+            <div class="control-hint" id="massHint">Ideal simple pendulum period is independent of mass. In air, mass alters wind drag inertia.</div>
+          </div>
+
+          <!-- 4. Gravitational Acceleration -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="gravNum">Gravitational acceleration (g)</label>
+              <span class="readout-badge" id="gravRead">9.81 m/s²</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="gravRange" type="range" min="1.00" max="25.00" step="0.01" value="9.81" aria-label="Gravity slider">
+              <input id="gravNum" class="num-input" type="number" min="1.00" max="25.00" step="0.01" value="9.81" aria-label="Gravity in metres per second squared">
+              <span class="unit-badge">m/s²</span>
+            </div>
+            <div class="preset-pills">
+              <button class="btn-preset active" data-g="9.81">Earth (9.81)</button>
+              <button class="btn-preset" data-g="1.62">Moon (1.62)</button>
+              <button class="btn-preset" data-g="3.72">Mars (3.72)</button>
+              <button class="btn-preset" data-g="24.79">Jupiter (24.79)</button>
+            </div>
+            <div class="control-hint" id="gravHint">Downward gravitational acceleration. Earth standard is ~9.81 m/s².</div>
+          </div>
+
+          <!-- 5. Air Damping -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="dampNum">Damping coefficient (γ)</label>
+              <span class="readout-badge" id="dampRead">0.012 s⁻¹</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="dampRange" type="range" min="0.000" max="0.100" step="0.001" value="0.012" aria-label="Damping coefficient slider">
+              <input id="dampNum" class="num-input" type="number" min="0.000" max="0.100" step="0.001" value="0.012" aria-label="Damping coefficient in inverse seconds">
+              <span class="unit-badge">s⁻¹</span>
+            </div>
+            <div class="control-hint" id="dampHint">Viscous air drag opposing motion. 0.000 = vacuum; 0.012 = calm indoor air.</div>
+          </div>
+
+          <!-- SECTION 3: Environmental Conditions -->
+          <div class="section-header"><span>🍃</span> Environmental Conditions</div>
+
+          <!-- 6. Cross-Breeze Wind -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="windNum">Cross-breeze strength</label>
+              <span class="readout-badge" id="windRead">10% (~1.0 m/s)</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="windRange" type="range" min="0" max="100" step="1" value="10" aria-label="Wind strength slider">
+              <input id="windNum" class="num-input" type="number" min="0" max="100" step="1" value="10" aria-label="Wind strength percentage">
+              <span class="unit-badge">%</span>
+            </div>
+            <div class="control-hint" id="windHint">Unsteady lateral breeze through greenhouse windows. 100% ≈ 10 m/s wind gust.</div>
+          </div>
+
+          <!-- 7. Lab Disturbance -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="noiseNum">Lab disturbance / Vibration</label>
+              <span class="readout-badge" id="noiseRead">5%</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="noiseRange" type="range" min="0" max="100" step="1" value="5" aria-label="Lab disturbance slider">
+              <input id="noiseNum" class="num-input" type="number" min="0" max="100" step="1" value="5" aria-label="Lab disturbance percentage">
+              <span class="unit-badge">%</span>
+            </div>
+            <div class="control-hint" id="noiseHint">Combines workbench micro-tremors and human stopwatch reaction-time uncertainty.</div>
+          </div>
+
+          <!-- SECTION 4: Measurement Settings -->
+          <div class="section-header"><span>⏱</span> Measurement Settings</div>
+          <div class="control-hint" style="background:#f4f0df;padding:10px 12px;border-radius:10px;border:1px solid #ddd6bf;">
+            <strong>Fixed 10-Period Timing Protocol:</strong> In physics practicals, timing 10 complete periods and dividing by 10 dramatically reduces human stopwatch reaction error compared to timing a single swing.
+          </div>
+        </div>
+
+        <div class="experiment-note">
+          <strong>Today's question:</strong> Does changing the string length change the time for one complete swing? Try three lengths and compare your notebook readings.
+        </div>
+      </article>
+    </section>
+
+    <!-- Lower Grid: Notebook & The Science -->
+    <section class="lower-grid">
+      <!-- Field Notebook Card -->
+      <article class="card">
+        <div class="section-title">
+          <h2>Your Field Notebook</h2>
+          <div class="title-actions">
+            <button class="btn btn-tertiary" id="btnExportCsv" title="Download trial readings as CSV file">📥 Export CSV</button>
+            <button class="btn btn-tertiary" id="btnClearLog" title="Clear notebook history">🗑️ Clear</button>
+            <span class="tiny-tag">Trial log</span>
+          </div>
+        </div>
+
+        <div class="results-body">
+          <div id="latestMetrics" class="results-empty">
+            Your first reading will appear here after the pendulum completes 10 periods. Compare your measured stopwatch result with theoretical predictions.
+          </div>
+
+          <div id="logWrap" class="table-wrap" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th>Trial</th>
+                  <th>Length</th>
+                  <th>Angle</th>
+                  <th>Mass</th>
+                  <th>Gravity</th>
+                  <th>Ideal T</th>
+                  <th>Measured T</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody id="logBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </article>
+
+      <!-- The Science Card -->
+      <article class="card">
+        <div class="section-title">
+          <h2>A Note from the Notebook</h2>
+          <span class="tiny-tag">The Science</span>
+        </div>
+
+        <div class="notebook-body">
+          <div class="formula">
+            <div class="eyebrow">Small-Angle Theory</div>
+            <div class="eq">T ≈ 2π √(L / g)</div>
+            <div class="small" id="idealEqDisplay">
+              T = period in seconds · L = string length in metres · g ≈ 9.81 m/s²
+            </div>
+          </div>
+
+          <div class="fact-list">
+            <div class="fact">
+              <div class="leaf">🌿</div>
+              <div>
+                <strong>Longer string, longer period.</strong> The period T increases with the square root of length (T ∝ √L). Quadrupling string length doubles the period.
+              </div>
+            </div>
+
+            <div class="fact">
+              <div class="leaf">⚖</div>
+              <div>
+                <strong>Mass is not the secret.</strong> In an ideal simple pendulum, gravitational force and inertia both scale directly with mass (F = mg = ma), so mass cancels out completely!
+              </div>
+            </div>
+
+            <div class="fact">
+              <div class="leaf">🍃</div>
+              <div>
+                <strong>Real rooms are not perfect.</strong> Cross-breezes, mechanical bench vibrations, air resistance, and human reaction time create realistic experimental variance.
+              </div>
+            </div>
+
+            <div class="fact">
+              <div class="leaf">📐</div>
+              <div>
+                <strong>Finite-angle correction.</strong> For larger angles (θ > 15°), the restoring force is non-linear (-g/L sin θ). The true period is slightly longer: T ≈ T₀(1 + 1/16 θ₀²).
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>Original prototype · Cozy hand-drawn 2D aesthetic · Stepped chibi character animation</span>
+    <span>Web Audio API procedural lo-fi soundtrack · Educational physics simulator</span>
+  </footer>
+</div>
+
+<!-- Character Wardrobe Customisation Modal -->
+<div class="modal-overlay" id="wardrobeModal" role="dialog" aria-modal="true" aria-labelledby="wardrobeTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">Character Studio</div>
+        <h2 id="wardrobeTitle">Customize Your Student Assistant</h2>
+      </div>
+      <button class="btn-close-modal" id="btnCloseWardrobe" aria-label="Close customisation modal">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Left Column: Live Preview & Pose Toggles -->
+      <div class="preview-col">
+        <canvas id="wardrobePreview" width="220" height="260" aria-label="Character preview"></canvas>
+        <div class="preview-poses">
+          <button class="btn-pose active" data-pose="idle">Idle</button>
+          <button class="btn-pose" data-pose="walking">Walk</button>
+          <button class="btn-pose" data-pose="celebrating">Celebrate</button>
+        </div>
+        <div class="control-hint" style="text-align:center;">
+          Previewing your hand-drawn chibi student. Changes appear instantly in the laboratory.
+        </div>
+      </div>
+
+      <!-- Right Column: Wardrobe Options -->
+      <div class="custom-options-col">
+        <!-- Appearance Options -->
+        <div class="custom-group">
+          <label for="skinSelect">Skin Tone</label>
+          <select id="skinSelect" class="custom-select" data-field="skinTone"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="hairStyleSelect">Hairstyle</label>
+          <select id="hairStyleSelect" class="custom-select" data-field="hairStyle"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="hairColorSelect">Hair Colour</label>
+          <select id="hairColorSelect" class="custom-select" data-field="hairColor"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="eyeColorSelect">Eye Colour</label>
+          <select id="eyeColorSelect" class="custom-select" data-field="eyeColor"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="eyeStyleSelect">Eye Expression</label>
+          <select id="eyeStyleSelect" class="custom-select" data-field="eyeStyle"></select>
+        </div>
+
+        <!-- Clothing Options -->
+        <div class="custom-group">
+          <label for="topSelect">Top & Sweater</label>
+          <select id="topSelect" class="custom-select" data-field="top"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="bottomSelect">Lower Body (Skirts / Pants)</label>
+          <select id="bottomSelect" class="custom-select" data-field="bottom"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="outerwearSelect">Lab Coat / Apron / Vest</label>
+          <select id="outerwearSelect" class="custom-select" data-field="outerwear"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="colorSelect">Clothing Colour Palette</label>
+          <select id="colorSelect" class="custom-select" data-field="clothingColor"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="shoeSelect">Footwear</label>
+          <select id="shoeSelect" class="custom-select" data-field="shoes"></select>
+        </div>
+
+        <!-- Science Accessories -->
+        <div class="custom-group">
+          <label for="accSelect">Head Accessory & Glasses</label>
+          <select id="accSelect" class="custom-select" data-field="accessory"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="handSelect">Handheld Science Tool</label>
+          <select id="handSelect" class="custom-select" data-field="handheld"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="modal-foot">
+      <div class="modal-foot-left">
+        <button class="btn btn-secondary" id="btnRandomWardrobe">🎲 Surprise Me</button>
+        <button class="btn btn-secondary" id="btnDefaultWardrobe">↺ Default Look</button>
+      </div>
+      <button class="btn btn-primary" id="btnSaveWardrobe">✓ Save & Enter Lab</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Scripts (No-build vanilla modular scripts) -->
+<script src="js/physics.js"></script>
+<script src="js/character.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

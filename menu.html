@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4eedc">
+<title>Mosslight — Title Menu Prototype</title>
+<style>
+  :root {
+    --paper: #f4eedc;
+    --paper-warm: #fbf7ec;
+    --ink: #263e35;
+    --ink-deep: #1b2d26;
+    --moss: #587961;
+    --moss-light: #7c9f85;
+    --moss-dark: #375340;
+    --earth: #543d2c;
+    --earth-dark: #38261a;
+    --gold: #e2b450;
+    --gold-glow: rgba(255, 230, 130, 0.45);
+    --gold-bright: #fff2a3;
+    --line: #dbd4be;
+    --font-serif: "Fraunces", "Georgia", "Palatino Linotype", "Book Antiqua", serif;
+    --font-sans: ui-rounded, "Trebuchet MS", system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 20px 32px;
+    position: relative;
+    overflow-x: hidden;
+    transition: background-color 0.8s ease;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Storybook Painted Canvas Backdrop */
+  .backdrop-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  /* Ambient light pool that expands across the room when the lamp is on */
+  .ambient-lamp-bloom {
+    position: absolute;
+    top: 36%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px;
+    height: 750px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 49% 38%, rgba(255, 238, 160, 0.42) 0%, rgba(255, 225, 120, 0.18) 38%, rgba(244, 238, 220, 0) 72%);
+    filter: blur(40px);
+    opacity: 1;
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s ease;
+  }
+
+  body.lamp-off .ambient-lamp-bloom {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  /* Distant Watercolor Greenhouse Architecture */
+  .greenhouse-window-silhouette {
+    position: absolute;
+    inset: 0;
+    opacity: 0.28;
+    background-image:
+      linear-gradient(to right, rgba(90, 120, 95, 0.22) 2px, transparent 2px),
+      linear-gradient(to bottom, rgba(90, 120, 95, 0.18) 2px, transparent 2px);
+    background-size: 160px 180px;
+    background-position: center top;
+    mask-image: radial-gradient(circle at 50% 40%, black 20%, transparent 80%);
+    -webkit-mask-image: radial-gradient(circle at 50% 40%, black 20%, transparent 80%);
+  }
+
+  /* Subtle Watercolor Paper Texture */
+  .paper-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    background-image: radial-gradient(#3a4f41 0.75px, transparent 0.75px);
+    background-size: 14px 14px;
+  }
+
+  /* Drifting Greenhouse Dust Motes */
+  .mote {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #fff8d6;
+    border-radius: 50%;
+    opacity: 0;
+    filter: blur(0.6px);
+    animation: driftMote 9s infinite ease-in-out;
+  }
+  .mote:nth-child(1) { top: 25%; left: 28%; animation-delay: 0s; animation-duration: 8.5s; width: 3.5px; height: 3.5px; }
+  .mote:nth-child(2) { top: 38%; left: 68%; animation-delay: 2.2s; animation-duration: 11s; width: 5px; height: 5px; }
+  .mote:nth-child(3) { top: 52%; left: 35%; animation-delay: 4.5s; animation-duration: 9.8s; width: 3px; height: 3px; }
+  .mote:nth-child(4) { top: 30%; left: 52%; animation-delay: 1.5s; animation-duration: 10.2s; width: 4px; height: 4px; }
+  .mote:nth-child(5) { top: 62%; left: 62%; animation-delay: 3.8s; animation-duration: 12s; width: 3.5px; height: 3.5px; }
+
+  @keyframes driftMote {
+    0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+    20% { opacity: 0.55; }
+    70% { opacity: 0.75; transform: translate(18px, -45px) scale(1.1); }
+    100% { transform: translate(32px, -80px) scale(0.9); opacity: 0; }
+  }
+
+  /* Header Corner Badges */
+  .menu-header {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .field-note-tag {
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #78694a;
+    background: #fbf2dc;
+    border: 1px dashed #d7c9a2;
+    padding: 7px 13px;
+    border-radius: 999px;
+  }
+
+  .standalone-pill {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--moss-dark);
+    background: #eaf1e5;
+    border: 1px solid #c9dac3;
+    padding: 6px 14px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .standalone-pill .pulse-leaf {
+    display: inline-block;
+    animation: gentleBreathe 3s infinite ease-in-out;
+  }
+
+  @keyframes gentleBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2) rotate(6deg); }
+  }
+
+  /* Main Title Screen Centerpiece */
+  .menu-main {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 10;
+    margin: auto 0;
+    padding: 20px 0;
+  }
+
+  /* The Logo Stage */
+  .logo-stage {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* SVG Logo Graphics */
+  .logo-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+    filter: drop-shadow(0 6px 12px rgba(40, 58, 47, 0.08));
+  }
+
+  /* Plant-Lamp Interactive Button */
+  .lamp-interactive-hitbox {
+    cursor: pointer;
+    outline: none;
+  }
+
+  .lamp-interactive-hitbox:focus-visible .hitbox-visual-indicator {
+    stroke: var(--moss);
+    stroke-width: 2.5;
+    stroke-dasharray: 6 4;
+  }
+
+  /* Subtle leaf breathing animation */
+  .swaying-leaf-left {
+    transform-origin: 512px 178px;
+    animation: leafSwayLeft 5.5s infinite ease-in-out;
+  }
+
+  .swaying-leaf-right {
+    transform-origin: 512px 160px;
+    animation: leafSwayRight 6.2s infinite ease-in-out 0.8s;
+  }
+
+  @keyframes leafSwayLeft {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-3.5deg) scale(1.02); }
+  }
+
+  @keyframes leafSwayRight {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(3deg) scale(1.01); }
+  }
+
+  /* Volumetric Light Beam Elements */
+  .volumetric-cone {
+    opacity: 0.82;
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bulb-corona {
+    opacity: 0.95;
+    transition: opacity 0.5s ease;
+  }
+
+  .lamp-inner-glow {
+    fill: #fff9db;
+    transition: fill 0.5s ease;
+  }
+
+  .leaf-highlight-left {
+    opacity: 0.88;
+    transition: opacity 0.55s ease;
+  }
+
+  .ground-light-pool {
+    opacity: 0.72;
+    transition: opacity 0.7s ease;
+  }
+
+  /* Living Moss Illumination Highlights */
+  .moss-lamp-highlight {
+    opacity: 0.92;
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* LAMP OFF STATES */
+  body.lamp-off .volumetric-cone,
+  body.lamp-off .bulb-corona,
+  body.lamp-off .ground-light-pool,
+  body.lamp-off .leaf-highlight-left,
+  body.lamp-off .moss-lamp-highlight {
+    opacity: 0;
+  }
+
+  body.lamp-off .lamp-inner-glow {
+    fill: #72624c;
+  }
+
+  /* Mechanical Switch Button on Base */
+  .switch-button-node {
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .switch-button-node:hover {
+    filter: brightness(1.12);
+  }
+
+  body:not(.lamp-off) .switch-button-node {
+    transform: translateY(2px);
+  }
+
+  /* Interactive Pill / Tooltip Indicator */
+  .lamp-status-pill {
+    margin-top: 6px;
+    margin-bottom: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fffdf5;
+    border: 1.5px solid var(--line);
+    padding: 7px 16px;
+    border-radius: 999px;
+    box-shadow: 0 3px 0 rgba(60, 72, 55, 0.07);
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--ink);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+
+  .lamp-status-pill:hover {
+    background: #fffef9;
+    transform: translateY(-1.5px);
+    box-shadow: 0 5px 0 rgba(60, 72, 55, 0.08);
+  }
+
+  .lamp-status-pill:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(60, 72, 55, 0.08);
+  }
+
+  .lamp-bulb-indicator {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #e5b347;
+    box-shadow: 0 0 0 3px #f7ebc8, 0 0 10px #f9cb55;
+    transition: all 0.4s ease;
+  }
+
+  body.lamp-off .lamp-bulb-indicator {
+    background: #9fa59d;
+    box-shadow: 0 0 0 3px #e3e7e1;
+  }
+
+  /* Subtitle & Tagline */
+  .subtitle {
+    font-family: var(--font-serif);
+    font-size: clamp(16px, 2.4vw, 22px);
+    font-style: italic;
+    letter-spacing: 0.04em;
+    color: var(--moss-dark);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+
+  .supporting-line {
+    font-size: 13.5px;
+    color: #69786a;
+    margin: 0 0 32px;
+    max-width: 480px;
+    line-height: 1.55;
+  }
+
+  /* Primary Action Button ("Begin Exploring") */
+  .btn-explore {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(180deg, #5c8369 0%, #446850 100%);
+    color: #fff9ea;
+    border: 0;
+    border-radius: 999px;
+    padding: 16px 36px;
+    font-size: 15px;
+    font-weight: 850;
+    letter-spacing: 0.03em;
+    box-shadow: 0 5px 0 #2d4735, 0 12px 28px rgba(45, 71, 53, 0.22);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s, filter 0.15s;
+    outline: none;
+    text-decoration: none;
+  }
+
+  .btn-explore:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+    box-shadow: 0 7px 0 #2d4735, 0 16px 34px rgba(45, 71, 53, 0.28);
+  }
+
+  .btn-explore:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #2d4735, 0 6px 14px rgba(45, 71, 53, 0.2);
+  }
+
+  .btn-explore:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 4px;
+  }
+
+  .btn-explore .sparkle {
+    font-size: 14px;
+    color: #fed979;
+    animation: sparkleTwinkle 2.5s infinite ease-in-out alternate;
+  }
+
+  @keyframes sparkleTwinkle {
+    0% { transform: scale(0.9) rotate(0deg); opacity: 0.8; }
+    100% { transform: scale(1.2) rotate(25deg); opacity: 1; }
+  }
+
+  /* Footer Notes */
+  .menu-footer {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 11.5px;
+    color: #788574;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    z-index: 10;
+  }
+
+  .footer-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  kbd {
+    background: #ede8d5;
+    border: 1px solid #d4ccb4;
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-family: inherit;
+    font-weight: 800;
+    color: #495e51;
+  }
+
+  /* Modal Dialog for Prototype Exploration */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 41, 33, 0.58);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background: #fffdf5;
+    border: 1.5px solid var(--line);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(20, 32, 24, 0.32);
+    max-width: 500px;
+    width: 100%;
+    padding: 32px 30px 28px;
+    text-align: center;
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-overlay.open .modal-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-sprout-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+    background: #eaf1e5;
+    border: 1.5px solid #c9dac3;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+    box-shadow: 0 4px 0 #bad0b2;
+  }
+
+  .modal-card h2 {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    margin: 0 0 10px;
+    color: var(--ink-deep);
+    letter-spacing: -0.02em;
+  }
+
+  .modal-quote {
+    font-size: 16px;
+    font-weight: 750;
+    color: var(--moss-dark);
+    margin: 0 0 14px;
+    line-height: 1.45;
+  }
+
+  .modal-text {
+    font-size: 12.5px;
+    color: #647365;
+    line-height: 1.6;
+    margin: 0 0 24px;
+    background: #f7f4e7;
+    border: 1px dashed #d9cfb6;
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+
+  .btn-dismiss-modal {
+    background: var(--moss);
+    color: #fff9ea;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 28px;
+    font-size: 13.5px;
+    font-weight: 850;
+    box-shadow: 0 4px 0 var(--moss-dark);
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+  }
+
+  .btn-dismiss-modal:hover {
+    background: var(--moss-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn-dismiss-modal:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--moss-dark);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .menu-header { flex-direction: column; gap: 10px; align-items: center; }
+    .subtitle { font-size: 17px; }
+    .supporting-line { font-size: 12.5px; margin-bottom: 24px; padding: 0 12px; }
+    .btn-explore { padding: 14px 28px; font-size: 14px; }
+    .menu-footer { flex-direction: column; text-align: center; justify-content: center; gap: 8px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Backdrop Visual Ambiance Layer -->
+  <div class="backdrop-layer" aria-hidden="true">
+    <div class="paper-grain"></div>
+    <div class="greenhouse-window-silhouette"></div>
+    <div class="ambient-lamp-bloom"></div>
+
+    <!-- Floating Spores / Dust Motes -->
+    <div class="mote"></div>
+    <div class="mote"></div>
+    <div class="mote"></div>
+    <div class="mote"></div>
+    <div class="mote"></div>
+  </div>
+
+  <!-- Header Corner Tags -->
+  <header class="menu-header">
+    <div class="field-note-tag">FIELD NOTE No. 000 · TITLE PAGE</div>
+    <div class="standalone-pill">
+      <span class="pulse-leaf" aria-hidden="true">🌱</span>
+      <span>Standalone Title Menu Prototype</span>
+    </div>
+  </header>
+
+  <!-- Central Title Display -->
+  <main class="menu-main">
+    <div class="logo-stage">
+      <!-- Complete Living Moss Botanical Typography SVG -->
+      <svg class="logo-svg" viewBox="0 0 940 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mosslight logo featuring living moss typography and a custom plant-lamp hybrid for the letter i">
+        <defs>
+          <!-- Volumetric Light Beam Gradient (Spreading Downward-Left) -->
+          <linearGradient id="volumetricBeamGrad" x1="75%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fff8cc" stop-opacity="0.82" />
+            <stop offset="28%" stop-color="#ffe98f" stop-opacity="0.48" />
+            <stop offset="68%" stop-color="#ffdc6b" stop-opacity="0.18" />
+            <stop offset="100%" stop-color="#f8e59d" stop-opacity="0" />
+          </linearGradient>
+
+          <!-- Bulb Aperture Corona Glow -->
+          <radialGradient id="bulbCoronaGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+            <stop offset="35%" stop-color="#fff09c" stop-opacity="0.75" />
+            <stop offset="70%" stop-color="#fed658" stop-opacity="0.3" />
+            <stop offset="100%" stop-color="#ffd550" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- Ground Floor Pool Glow Gradient -->
+          <radialGradient id="groundPoolGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffea94" stop-opacity="0.55" />
+            <stop offset="45%" stop-color="#ffde78" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#f6e8b4" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- ============================================== -->
+          <!-- LIVING MOSS GRADIENTS & SHADING PALETTES       -->
+          <!-- ============================================== -->
+
+          <!-- Deep Forest Undergrowth Base Layer for "moss" -->
+          <linearGradient id="mossBaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2a4a2f" />
+            <stop offset="40%" stop-color="#1e3722" />
+            <stop offset="85%" stop-color="#162919" />
+            <stop offset="100%" stop-color="#112013" />
+          </linearGradient>
+
+          <!-- Soft Living Moss Cushion Body (Velvety Middle Layer) -->
+          <radialGradient id="mossCushionGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#558c4e" />
+            <stop offset="50%" stop-color="#3d6c38" />
+            <stop offset="85%" stop-color="#284c25" />
+            <stop offset="100%" stop-color="#1b3619" />
+          </radialGradient>
+
+          <!-- Sunlit Crests & Upper Moss Cushions -->
+          <radialGradient id="mossHighCushionGrad" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#80bd74" />
+            <stop offset="45%" stop-color="#58924f" />
+            <stop offset="80%" stop-color="#3b6935" />
+            <stop offset="100%" stop-color="#264822" />
+          </radialGradient>
+
+          <!-- Fresh Sprouting Moss Leaflet Tips -->
+          <linearGradient id="mossLeafletTip" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#4e8245" />
+            <stop offset="50%" stop-color="#7ebc73" />
+            <stop offset="100%" stop-color="#a8e29d" />
+          </linearGradient>
+
+          <!-- Complementary Weathered Botanical Wood & Moss Base for "light" -->
+          <linearGradient id="mossWoodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#304e38" />
+            <stop offset="45%" stop-color="#233a2a" />
+            <stop offset="85%" stop-color="#1a2d20" />
+            <stop offset="100%" stop-color="#132218" />
+          </linearGradient>
+
+          <!-- Warm Golden-Chartreuse Gleam when Lamp is ON -->
+          <linearGradient id="lampMossLitGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fff3a6" stop-opacity="0.95" />
+            <stop offset="45%" stop-color="#f6db6a" stop-opacity="0.75" />
+            <stop offset="80%" stop-color="#a4d166" stop-opacity="0.4" />
+            <stop offset="100%" stop-color="#4f843d" stop-opacity="0" />
+          </linearGradient>
+
+          <!-- Organic Brass & Moss Shading for Lamp Hood -->
+          <linearGradient id="lampCasingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#809c73" />
+            <stop offset="30%" stop-color="#557550" />
+            <stop offset="70%" stop-color="#3d573b" />
+            <stop offset="100%" stop-color="#2c412a" />
+          </linearGradient>
+
+          <!-- Lamp Hood Rim Metallic Trim -->
+          <linearGradient id="lampBrassRim" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fae39d" />
+            <stop offset="50%" stop-color="#cca144" />
+            <stop offset="100%" stop-color="#8c6a23" />
+          </linearGradient>
+
+          <!-- Organic Plant Stem Gradient -->
+          <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#72986f" />
+            <stop offset="50%" stop-color="#4e7551" />
+            <stop offset="100%" stop-color="#3b593e" />
+          </linearGradient>
+
+          <!-- Botanical Leaf Gradients -->
+          <linearGradient id="leafGradLeft" x1="100%" y1="80%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#4b704e" />
+            <stop offset="55%" stop-color="#679165" />
+            <stop offset="100%" stop-color="#8bb789" />
+          </linearGradient>
+
+          <linearGradient id="leafGradRight" x1="0%" y1="80%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#406342" />
+            <stop offset="60%" stop-color="#5b8258" />
+            <stop offset="100%" stop-color="#7ea87c" />
+          </linearGradient>
+
+          <!-- Ceramic Pot & Earth Gradients -->
+          <linearGradient id="potClayGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#a47754" />
+            <stop offset="50%" stop-color="#c6946a" />
+            <stop offset="100%" stop-color="#885e3e" />
+          </linearGradient>
+
+          <linearGradient id="soilMoundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#453123" />
+            <stop offset="70%" stop-color="#312217" />
+            <stop offset="100%" stop-color="#24180f" />
+          </linearGradient>
+
+          <!-- Drop Shadow Filter for Letters & Pot -->
+          <filter id="softShadow" x="-10%" y="-10%" width="125%" height="135%">
+            <feDropShadow dx="0" dy="4" stdDeviation="3.5" flood-color="#142416" flood-opacity="0.18" />
+          </filter>
+
+          <!-- Soft Glow Filter for Volumetric Light -->
+          <filter id="lightGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="9" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Ambient Ground Light Pool beneath Lamp (Appears when ON) -->
+        <ellipse class="ground-light-pool" cx="490" cy="254" rx="145" ry="38" fill="url(#groundPoolGrad)" />
+
+        <!-- ================================================================= -->
+        <!-- TYPOGRAPHY WORD 1: "moss" (LIVING MOSS SCULPTED LETTERFORMS)      -->
+        <!-- ================================================================= -->
+        <g id="wordMoss" filter="url(#softShadow)">
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 'm' (x ≈ 54 to 196, baseline ≈ 224)                      -->
+          <!-- --------------------------------------------------------------- -->
+          <!-- Deep Organic Base Silhouette -->
+          <path d="M 58 224 L 58 132 C 58 126 62 122 68 122 C 74 122 78 126 78 132 L 78 144 C 84 130 96 120 110 120 C 122 120 131 127 135 138 C 142 128 153 120 166 120 C 182 120 193 131 193 150 L 193 224 C 193 228 189 231 184 231 C 179 231 175 228 175 224 L 175 154 C 175 142 169 135 158 135 C 147 135 139 143 139 157 L 139 224 C 139 228 135 231 130 231 C 125 231 121 228 121 224 L 121 154 C 121 142 115 135 105 135 C 94 135 86 144 86 158 L 86 224 C 86 228 82 231 77 231 C 72 231 68 228 68 224 Z"
+                fill="url(#mossBaseGrad)" />
+
+          <!-- Velvety Living Moss Cushions on Letter 'm' -->
+          <!-- Left stem cushion mounds -->
+          <ellipse cx="68" cy="138" rx="8" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="69" cy="160" rx="9" ry="8" fill="url(#mossCushionGrad)" />
+          <ellipse cx="68" cy="184" rx="8.5" ry="8" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="69" cy="208" rx="9" ry="8" fill="url(#mossCushionGrad)" />
+          <ellipse cx="67" cy="226" rx="10" ry="5.5" fill="#2b4725" />
+
+          <!-- Center arch and stem cushions -->
+          <ellipse cx="98" cy="126" rx="9.5" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="114" cy="122" rx="10.5" ry="6.5" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="129" cy="144" rx="8.5" ry="8" fill="url(#mossCushionGrad)" />
+          <ellipse cx="130" cy="168" rx="8.5" ry="8" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="130" cy="194" rx="9" ry="8" fill="url(#mossCushionGrad)" />
+          <ellipse cx="129" cy="223" rx="9.5" ry="6.5" fill="#2b4725" />
+
+          <!-- Right arch and stem cushions -->
+          <ellipse cx="152" cy="126" rx="9.5" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="168" cy="122" rx="10.5" ry="6.5" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="183" cy="144" rx="8.5" ry="8" fill="url(#mossCushionGrad)" />
+          <ellipse cx="184" cy="168" rx="8.5" ry="8" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="184" cy="194" rx="9" ry="8" fill="url(#mossCushionGrad)" />
+          <ellipse cx="183" cy="223" rx="9.5" ry="6.5" fill="#2b4725" />
+
+          <!-- Miniature Moss Leaflets & Sprouts on 'm' -->
+          <path d="M 64 124 Q 57 116 63 111 Q 69 114 67 123 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 58 152 Q 51 150 53 145 Q 59 146 59 152 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 114 120 Q 116 111 122 110 Q 123 117 117 122 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 168 120 Q 171 111 177 110 Q 178 117 172 122 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 58 227 Q 50 229 52 233 Q 59 231 61 226 Z" fill="#3a6032" />
+          <path d="M 193 226 Q 201 228 199 233 Q 192 231 190 225 Z" fill="#3a6032" />
+
+          <!-- Delicate Bryophyte Spore Capsules on 'm' -->
+          <path d="M 112 121 Q 110 110 114 103" stroke="#5d8b52" stroke-width="0.9" fill="none" stroke-linecap="round" />
+          <ellipse cx="114" cy="102" rx="1.4" ry="2" fill="#d2b85e" />
+          <path d="M 166 121 Q 164 111 169 104" stroke="#5d8b52" stroke-width="0.9" fill="none" stroke-linecap="round" />
+          <ellipse cx="169" cy="103" rx="1.4" ry="2" fill="#d2b85e" />
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 'o' (x ≈ 198 to 268, baseline ≈ 224)                      -->
+          <!-- --------------------------------------------------------------- -->
+          <!-- Deep Organic Base Silhouette -->
+          <path d="M 233 120 C 253 120 268 135 268 175 C 268 214 253 229 233 229 C 213 229 198 214 198 175 C 198 135 213 120 233 120 Z M 233 135 C 223 135 216 148 216 175 C 216 201 223 214 233 214 C 243 214 250 201 250 175 C 250 148 243 135 233 135 Z"
+                fill="url(#mossBaseGrad)" />
+
+          <!-- Ring of Velvety Moss Cushions on Letter 'o' -->
+          <ellipse cx="233" cy="127" rx="15" ry="8" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="212" cy="144" rx="10.5" ry="12" fill="url(#mossCushionGrad)" />
+          <ellipse cx="205" cy="175" rx="8.5" ry="14" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="213" cy="206" rx="10.5" ry="11" fill="url(#mossCushionGrad)" />
+          <ellipse cx="233" cy="222" rx="15" ry="7.5" fill="#2b4725" />
+          <ellipse cx="253" cy="206" rx="10.5" ry="11" fill="url(#mossCushionGrad)" />
+          <ellipse cx="261" cy="175" rx="8.5" ry="14" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="254" cy="144" rx="10.5" ry="12" fill="url(#mossCushionGrad)" />
+
+          <!-- Sprouts & Spore Stalk on 'o' -->
+          <path d="M 233 120 Q 235 111 241 110 Q 242 117 236 122 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 198 174 Q 191 172 193 167 Q 199 168 199 174 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 268 174 Q 275 172 273 167 Q 267 168 267 174 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 230 121 Q 228 109 232 102" stroke="#5d8b52" stroke-width="0.9" fill="none" stroke-linecap="round" />
+          <ellipse cx="232" cy="101" rx="1.4" ry="2" fill="#d2b85e" />
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 's' (FIRST, x ≈ 270 to 330)                               -->
+          <!-- --------------------------------------------------------------- -->
+          <!-- Deep Organic Base Silhouette -->
+          <path d="M 319 144 C 316 138 310 134 301 134 C 291 134 286 139 286 146 C 286 153 291 157 302 160 L 308 162 C 322 166 330 174 330 189 C 330 204 318 217 299 217 C 285 217 274 210 270 199 C 269 195 272 191 276 191 C 280 191 283 194 285 198 C 288 203 294 207 300 207 C 309 207 314 201 314 193 C 314 185 309 180 297 177 L 291 175 C 278 171 271 163 271 149 C 271 136 282 124 299 124 C 310 124 319 129 324 138 C 325 141 324 145 321 146 C 320 147 319 146 319 144 Z"
+                fill="url(#mossBaseGrad)" />
+
+          <!-- Contoured Moss Cushions on First 's' -->
+          <ellipse cx="316" cy="138" rx="8" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="300" cy="130" rx="12" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="284" cy="144" rx="8" ry="9" fill="url(#mossCushionGrad)" />
+          <ellipse cx="298" cy="164" rx="10" ry="11" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="320" cy="186" rx="8" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="304" cy="210" rx="13" ry="7" fill="#2b4725" />
+          <ellipse cx="277" cy="204" rx="8" ry="7" fill="url(#mossHighCushionGrad)" />
+
+          <!-- Sprouts on First 's' -->
+          <path d="M 301 125 Q 303 116 309 115 Q 310 122 304 127 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 271 146 Q 264 144 266 139 Q 272 140 272 146 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 330 188 Q 337 186 335 181 Q 329 182 329 188 Z" fill="url(#mossLeafletTip)" />
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 's' (SECOND, x ≈ 330 to 390 — FACING PLANT-LAMP)           -->
+          <!-- --------------------------------------------------------------- -->
+          <!-- Deep Organic Base Silhouette -->
+          <path d="M 379 144 C 376 138 370 134 361 134 C 351 134 346 139 346 146 C 346 153 351 157 362 160 L 368 162 C 382 166 390 174 390 189 C 390 204 378 217 359 217 C 345 217 334 210 330 199 C 329 195 332 191 336 191 C 340 191 343 194 345 198 C 348 203 354 207 360 207 C 369 207 374 201 374 193 C 374 185 369 180 357 177 L 351 175 C 338 171 331 163 331 149 C 331 136 342 124 359 124 C 370 124 379 129 384 138 C 385 141 384 145 381 146 C 380 147 379 146 379 144 Z"
+                fill="url(#mossBaseGrad)" />
+
+          <!-- Contoured Moss Cushions on Second 's' -->
+          <ellipse cx="376" cy="138" rx="8" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="360" cy="130" rx="12" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="344" cy="144" rx="8" ry="9" fill="url(#mossCushionGrad)" />
+          <ellipse cx="358" cy="164" rx="10" ry="11" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="380" cy="186" rx="8" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="364" cy="210" rx="13" ry="7" fill="#2b4725" />
+          <ellipse cx="337" cy="204" rx="8" ry="7" fill="url(#mossHighCushionGrad)" />
+
+          <!-- Sprouts on Second 's' -->
+          <path d="M 361 125 Q 363 116 369 115 Q 370 122 364 127 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 331 146 Q 324 144 326 139 Q 332 140 332 146 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 390 188 Q 397 186 395 181 Q 389 182 389 188 Z" fill="url(#mossLeafletTip)" />
+
+          <!-- DYNAMIC LAMP LIGHT HIGHLIGHT ON SECOND 's' (Revealed when ON) -->
+          <g class="moss-lamp-highlight">
+            <ellipse cx="378" cy="138" rx="6.5" ry="5.5" fill="url(#lampMossLitGrad)" />
+            <ellipse cx="382" cy="186" rx="6.5" ry="7.5" fill="url(#lampMossLitGrad)" />
+            <path d="M 364 160 Q 378 174 380 188" stroke="#ffe794" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.8" />
+          </g>
+        </g>
+
+        <!-- ================================================================= -->
+        <!-- TYPOGRAPHY WORD 2: "l" + [PLANT-LAMP] + "ght" (HARMONIZED)        -->
+        <!-- ================================================================= -->
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- LETTER 'l' (x ≈ 436 to 471, DIRECTLY IN LIGHT BEAM)               -->
+        <!-- ----------------------------------------------------------------- -->
+        <g id="charL" filter="url(#softShadow)">
+          <!-- Weathered Botanical Wood/Bark Base -->
+          <path d="M 436 82 C 436 76 440 72 446 72 C 452 72 456 76 456 82 L 456 215 C 456 220 460 224 466 224 C 469 224 471 226 471 229 C 471 232 468 234 463 234 C 450 234 440 227 438 218 L 436 215 Z"
+                fill="url(#mossWoodGrad)" />
+
+          <!-- Living Moss Cushions Adorning Letter 'l' -->
+          <ellipse cx="446" cy="80" rx="9" ry="6" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="446" cy="118" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="446" cy="154" rx="8" ry="10" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="446" cy="188" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="456" cy="222" rx="9" ry="6" fill="#2b4725" />
+          <ellipse cx="466" cy="228" rx="7" ry="4.5" fill="url(#mossHighCushionGrad)" />
+
+          <!-- Sprout & Spore Capsule atop 'l' -->
+          <path d="M 446 73 Q 447 64 453 63 Q 454 70 449 75 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 444 74 Q 442 63 446 56" stroke="#5d8b52" stroke-width="0.9" fill="none" stroke-linecap="round" />
+          <ellipse cx="446" cy="55" rx="1.4" ry="2" fill="#d2b85e" />
+
+          <!-- DYNAMIC LAMP LIGHT HIGHLIGHT ON 'l' (Direct volumetric beam wash) -->
+          <g class="moss-lamp-highlight">
+            <path d="M 456 92 L 456 220" stroke="url(#lampMossLitGrad)" stroke-width="4.5" stroke-linecap="round" />
+            <ellipse cx="463" cy="226" rx="8" ry="5.5" fill="url(#lampMossLitGrad)" />
+          </g>
+        </g>
+
+        <!-- ================================================================= -->
+        <!-- THE PLANT-LAMP (LIVING HYBRID REPLACING THE LETTER 'i')           -->
+        <!-- Center x ≈ 512, Top ≈ 65, Baseline ≈ 232                          -->
+        <!-- ================================================================= -->
+        <g id="plantLampGroup" class="lamp-interactive-hitbox" tabindex="0" role="button" aria-label="Turn lamp off" aria-pressed="true">
+          <!-- Invisible generous hit target for keyboard and mouse clicks -->
+          <rect class="hitbox-visual-indicator" x="420" y="45" width="180" height="215" rx="20" fill="transparent" stroke="transparent" />
+
+          <!-- 1. Volumetric Light Cone (radiating downward-left from lamp aperture) -->
+          <polygon class="volumetric-cone" points="460,94 482,122 365,248 295,215" fill="url(#volumetricBeamGrad)" filter="url(#lightGlowFilter)" pointer-events="none" />
+          <polygon class="volumetric-cone" points="464,98 480,118 385,242 320,215" fill="url(#volumetricBeamGrad)" pointer-events="none" />
+
+          <!-- 2. Soil Mound, Living Moss Cushions, and Ceramic Pot Base -->
+          <!-- Ceramic Pot Saucer -->
+          <ellipse cx="512" cy="235" rx="36" ry="11" fill="url(#potClayGrad)" stroke="#66462d" stroke-width="1.8" />
+          <path d="M 476 235 C 476 243 492 250 512 250 C 532 250 548 243 548 235 L 548 238 C 548 246 532 253 512 253 C 492 253 476 246 476 238 Z" fill="#755034" />
+          <!-- Dark Organic Earth Mound -->
+          <ellipse cx="512" cy="233" rx="31" ry="8" fill="url(#soilMoundGrad)" />
+
+          <!-- Living Moss Cushions Spilling over Pot Rim (Unifying Ecosystem) -->
+          <ellipse cx="496" cy="232" rx="9" ry="4.5" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="528" cy="232" rx="9" ry="4.5" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="512" cy="229" rx="10" ry="5" fill="url(#mossCushionGrad)" />
+          <path d="M 490 231 Q 484 227 487 224 Q 492 226 491 231 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 533 231 Q 539 227 537 224 Q 531 226 532 231 Z" fill="url(#mossLeafletTip)" />
+
+          <!-- Earth Texture flecks -->
+          <circle cx="503" cy="232" r="1.4" fill="#604733" />
+          <circle cx="522" cy="234" r="1.2" fill="#604733" />
+          <circle cx="514" cy="230" r="1.5" fill="#604733" />
+          <circle cx="528" cy="232" r="1.1" fill="#604733" />
+
+          <!-- Visible Roots grounding the plant into the earth (as in sketch) -->
+          <g stroke="#917454" stroke-width="1.8" stroke-linecap="round" fill="none">
+            <path d="M 509 224 C 506 228 501 232 494 234" />
+            <path d="M 507 226 C 504 231 498 235 491 236" stroke-width="1.2" />
+            <path d="M 515 224 C 518 228 524 232 531 234" />
+            <path d="M 516 226 C 520 231 526 235 533 236" stroke-width="1.2" />
+            <path d="M 512 225 L 512 233" stroke-width="1.5" />
+          </g>
+
+          <!-- Mechanical Clickable Switch on the Pot Base (from sketch) -->
+          <g id="lampSwitchNode" class="switch-button-node">
+            <!-- Brass switch collar -->
+            <ellipse cx="488" cy="236" rx="5" ry="2.6" fill="#735722" />
+            <!-- Brass toggle push button -->
+            <ellipse id="switchBtnTop" cx="488" cy="233" rx="4.2" ry="2.2" fill="#e0b24e" stroke="#947125" stroke-width="1" />
+          </g>
+
+          <!-- 3. Slender Botanical Stem (the body of the letter 'i') -->
+          <!-- Organic curved trunk rising from roots to lamp neck -->
+          <path d="M 510 227 C 510 200 509 175 511 145 C 512 128 515 110 507 98 C 502 91 494 88 488 90"
+                fill="none" stroke="url(#stemGrad)" stroke-width="6.5" stroke-linecap="round" />
+          <!-- Inner highlight line on stem -->
+          <path d="M 511 222 C 511 198 510 174 512 145 C 513 130 516 114 509 101"
+                fill="none" stroke="#90b88c" stroke-width="1.4" stroke-linecap="round" />
+
+          <!-- 4. Botanical Leaves (from sketch: left & right graceful leaves with veins) -->
+          <!-- Left Leaf (swaying gently) -->
+          <g class="swaying-leaf-left">
+            <path d="M 511 178 C 496 178 474 168 463 154 C 476 148 497 151 511 170 Z"
+                  fill="url(#leafGradLeft)" stroke="#39583c" stroke-width="1.4" />
+            <!-- Central and side leaf veins -->
+            <path d="M 511 176 C 498 171 484 163 466 155" fill="none" stroke="#335036" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M 498 171 Q 494 164 492 161" fill="none" stroke="#335036" stroke-width="0.9" />
+            <path d="M 488 166 Q 482 160 480 157" fill="none" stroke="#335036" stroke-width="0.9" />
+            <!-- Warm highlight on upper leaf blade when lamp is ON -->
+            <path class="leaf-highlight-left" d="M 508 172 C 496 166 482 158 468 154 C 476 151 493 153 508 166 Z" fill="rgba(255, 246, 179, 0.45)" />
+          </g>
+
+          <!-- Right Leaf (swaying gently) -->
+          <g class="swaying-leaf-right">
+            <path d="M 512 160 C 526 156 548 144 559 130 C 548 126 527 131 512 152 Z"
+                  fill="url(#leafGradRight)" stroke="#335235" stroke-width="1.4" />
+            <!-- Central and side leaf veins -->
+            <path d="M 512 158 C 524 151 539 141 556 132" fill="none" stroke="#2e4830" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M 526 152 Q 530 144 532 141" fill="none" stroke="#2e4830" stroke-width="0.9" />
+            <path d="M 536 146 Q 542 139 544 136" fill="none" stroke="#2e4830" stroke-width="0.9" />
+          </g>
+
+          <!-- Small Sprouting Leaf Bud (botanical detail) -->
+          <path d="M 510 198 C 504 195 500 190 499 185 C 504 186 508 191 510 196 Z" fill="#719b6e" stroke="#3b593e" stroke-width="1" />
+
+          <!-- 5. Moss-Covered Lamp Head (angled downward to the left) -->
+          <!-- Neck fitting / brass swivel joint connecting plant stem to lamp -->
+          <ellipse cx="493" cy="94" rx="4.5" ry="4.5" fill="#caa042" stroke="#6b501d" stroke-width="1.2" />
+
+          <!-- Lamp Hood Body (Cylindrical / Bell shape, angled ~35° down-left) -->
+          <path d="M 494 88 C 504 94 502 110 488 116 L 466 102 C 463 94 476 83 494 88 Z"
+                fill="url(#lampCasingGrad)" stroke="#273d26" stroke-width="1.8" />
+
+          <!-- Living Moss Cushions Adorning the Lamp Head (from sketch & ecosystem) -->
+          <ellipse cx="490" cy="93" rx="4.5" ry="3" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="482" cy="100" rx="5" ry="3.5" fill="url(#mossCushionGrad)" />
+          <path d="M 495 87 Q 501 84 499 89 Z" fill="url(#mossLeafletTip)" />
+
+          <!-- Organic Moss Stippling & Texture on Lamp Head -->
+          <circle cx="491" cy="94" r="1.5" fill="#88af7a" />
+          <circle cx="496" cy="99" r="1.3" fill="#88af7a" />
+          <circle cx="488" cy="103" r="1.6" fill="#779d6b" />
+          <circle cx="482" cy="98" r="1.2" fill="#88af7a" />
+          <circle cx="478" cy="104" r="1.4" fill="#698e5e" />
+          <circle cx="474" cy="96" r="1.2" fill="#88af7a" />
+          <circle cx="484" cy="91" r="1.3" fill="#9bc48d" />
+
+          <!-- Brass Trim Band across Lamp Head -->
+          <path d="M 488 90 L 480 110" stroke="url(#lampBrassRim)" stroke-width="2.2" stroke-linecap="round" />
+
+          <!-- Lamp Head Opening / Aperture Rim (Oval angled toward left) -->
+          <ellipse cx="463" cy="98" rx="8" ry="14" transform="rotate(-36 463 98)"
+                   fill="#2c3c2b" stroke="url(#lampBrassRim)" stroke-width="2.4" />
+
+          <!-- Inner Reflector & Glow Disc inside Lamp Aperture -->
+          <ellipse class="lamp-inner-glow" cx="463" cy="98" rx="6" ry="11.5" transform="rotate(-36 463 98)" />
+
+          <!-- Intense Bulb Light Corona (when ON) -->
+          <ellipse class="bulb-corona" cx="463" cy="98" rx="14" ry="19" transform="rotate(-36 463 98)"
+                   fill="url(#bulbCoronaGrad)" pointer-events="none" />
+        </g>
+
+        <!-- ================================================================= -->
+        <!-- TYPOGRAPHY CONTINUATION: "ght" (HARMONIZED LIVING BOTANICAL TEXT) -->
+        <!-- ================================================================= -->
+        <g id="wordGht" filter="url(#softShadow)">
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 'g' (x ≈ 568 to 636, loop with descender)                -->
+          <!-- --------------------------------------------------------------- -->
+          <path d="M 602 120 C 622 120 636 134 636 160 L 636 215 C 636 238 626 254 602 254 C 586 254 574 246 570 236 C 569 232 572 228 577 228 C 581 228 584 231 587 235 C 590 239 595 242 602 242 C 618 242 624 231 624 215 L 624 207 C 618 217 608 223 596 223 C 578 223 564 209 564 172 C 564 136 579 120 602 120 Z M 602 134 C 588 134 578 147 578 172 C 578 196 588 209 602 209 C 614 209 624 198 624 182 L 624 160 C 624 144 614 134 602 134 Z"
+                fill="url(#mossWoodGrad)" />
+
+          <!-- Living Moss Cushions on Letter 'g' -->
+          <ellipse cx="602" cy="126" rx="12" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="624" cy="170" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="578" cy="172" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="602" cy="209" rx="12" ry="6.5" fill="#2b4725" />
+          <ellipse cx="602" cy="247" rx="13" ry="6.5" fill="url(#mossHighCushionGrad)" />
+
+          <!-- Leaflet Sprouts on 'g' -->
+          <path d="M 602 120 Q 604 111 610 110 Q 611 117 605 122 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 636 132 Q 643 130 641 125 Q 635 126 635 132 Z" fill="url(#mossLeafletTip)" />
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 'h' (x ≈ 648 to 716, ascender to baseline)               -->
+          <!-- --------------------------------------------------------------- -->
+          <path d="M 650 82 C 650 76 654 72 660 72 C 666 72 670 76 670 82 L 670 144 C 677 130 689 120 703 120 C 720 120 730 131 730 150 L 730 224 C 730 228 726 231 721 231 C 716 231 712 228 712 224 L 712 154 C 712 142 705 135 694 135 C 683 135 673 144 673 158 L 673 224 C 673 228 669 231 664 231 C 659 231 655 228 655 224 L 655 82 Z"
+                fill="url(#mossWoodGrad)" />
+
+          <!-- Living Moss Cushions on Letter 'h' -->
+          <ellipse cx="660" cy="80" rx="9" ry="6" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="660" cy="116" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="660" cy="188" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="660" cy="222" rx="9" ry="6" fill="#2b4725" />
+          <ellipse cx="703" cy="126" rx="12" ry="7" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="721" cy="168" rx="7.5" ry="10" fill="url(#mossCushionGrad)" />
+          <ellipse cx="721" cy="222" rx="8" ry="6" fill="#2b4725" />
+
+          <!-- Sprout & Spore Stalk atop 'h' -->
+          <path d="M 660 73 Q 661 64 667 63 Q 668 70 663 75 Z" fill="url(#mossLeafletTip)" />
+          <path d="M 658 74 Q 656 63 660 56" stroke="#5d8b52" stroke-width="0.9" fill="none" stroke-linecap="round" />
+          <ellipse cx="660" cy="55" rx="1.4" ry="2" fill="#d2b85e" />
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- LETTER 't' (x ≈ 738 to 790, crossbar at x-height)               -->
+          <!-- --------------------------------------------------------------- -->
+          <path d="M 753 96 C 753 91 756 87 761 87 C 766 87 770 91 770 96 L 770 122 L 784 122 C 788 122 791 125 791 129 C 791 133 788 136 784 136 L 770 136 L 770 205 C 770 216 775 221 783 221 C 786 221 789 223 789 226 C 789 229 786 232 781 232 C 768 232 753 224 753 205 L 753 136 L 744 136 C 740 136 737 133 737 129 C 737 125 740 122 744 122 L 753 122 Z"
+                fill="url(#mossWoodGrad)" />
+
+          <!-- Living Moss Cushions on Letter 't' -->
+          <ellipse cx="744" cy="128" rx="6.5" ry="5" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="784" cy="128" rx="6.5" ry="5" fill="url(#mossHighCushionGrad)" />
+          <ellipse cx="761" cy="165" rx="7.5" ry="9" fill="url(#mossCushionGrad)" />
+          <ellipse cx="781" cy="223" rx="8" ry="6" fill="#2b4725" />
+
+          <!-- Sprout on 't' -->
+          <path d="M 761 122 Q 763 114 769 113 Q 770 120 764 124 Z" fill="url(#mossLeafletTip)" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Interactive Lamp Status Pill / Hint -->
+    <button class="lamp-status-pill" id="lampStatusPill" aria-label="Toggle plant-lamp illumination" title="Click anywhere on the plant-lamp or switch to toggle the light">
+      <span class="lamp-bulb-indicator" id="lampIndicatorLight"></span>
+      <span id="lampStatusText">Light ON · Click plant-lamp to toggle</span>
+    </button>
+
+    <!-- Subtitle and Supporting Line -->
+    <div class="subtitle">A Little Physics Lab</div>
+    <p class="supporting-line">A quiet place for curious minds. Where real-world conditions meet the wonder of physics exploration.</p>
+
+    <!-- Prominent Primary Call-to-Action Button -->
+    <button class="btn-explore" id="btnExplore" aria-haspopup="dialog" aria-controls="exploreModal">
+      <span class="sparkle" aria-hidden="true">✦</span>
+      <span>Begin Exploring</span>
+      <span class="sparkle" aria-hidden="true">✦</span>
+    </button>
+  </main>
+
+  <!-- Menu Footer Information -->
+  <footer class="menu-footer">
+    <div class="footer-hint">
+      <span>Tip: Click the <strong>lamp head</strong>, <strong>stem</strong>, or <strong>switch</strong> to toggle the light.</span>
+    </div>
+    <div>
+      <span>Press <kbd>Tab</kbd> then <kbd>Space</kbd> / <kbd>Enter</kbd> to toggle with keyboard</span>
+    </div>
+  </footer>
+
+  <!-- Confirmation Modal for "Begin Exploring" Action -->
+  <div class="modal-overlay" id="exploreModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <div class="modal-card">
+      <div class="modal-sprout-icon" aria-hidden="true">🌱</div>
+      <h2 id="modalTitle">The Greenhouse Awaits</h2>
+      <div class="modal-quote">“Your adventure is growing. The laboratory awaits.”</div>
+      <div class="modal-text" id="modalDesc">
+        <strong>Standalone Title Menu Prototype:</strong><br>
+        This menu design showcases the hand-drawn plant-lamp identity and light interaction. In a future milestone, this button will guide the player into the greenhouse practical.
+      </div>
+      <button class="btn-dismiss-modal" id="btnDismissModal">Return to Title Menu</button>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    // State Variables
+    let isLampOn = true;
+
+    // DOM Elements
+    const body = document.body;
+    const lampGroup = document.getElementById('plantLampGroup');
+    const lampStatusPill = document.getElementById('lampStatusPill');
+    const lampStatusText = document.getElementById('lampStatusText');
+    const lampSwitchNode = document.getElementById('lampSwitchNode');
+    const btnExplore = document.getElementById('btnExplore');
+    const exploreModal = document.getElementById('exploreModal');
+    const btnDismissModal = document.getElementById('btnDismissModal');
+
+    // Procedural Web Audio API Switch Sound (Zero external files, 100% offline)
+    let audioCtx = null;
+    function playSwitchSound(turningOn) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const t = audioCtx.currentTime;
+
+        // Mechanical switch click (soft wooden tap & metallic snap)
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(turningOn ? 520 : 380, t);
+        osc1.frequency.exponentialRampToValueAtTime(120, t + 0.045);
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(turningOn ? 1800 : 1200, t);
+        osc2.frequency.exponentialRampToValueAtTime(300, t + 0.035);
+
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc1.stop(t + 0.065);
+        osc2.stop(t + 0.065);
+      } catch (e) {
+        // Audio errors fail silently to ensure visual interaction remains flawless
+      }
+    }
+
+    /**
+     * Toggle Plant-Lamp Light State
+     */
+    function toggleLamp(e) {
+      if (e) e.preventDefault();
+      isLampOn = !isLampOn;
+
+      // Update Body Class
+      body.classList.toggle('lamp-off', !isLampOn);
+
+      // Update ARIA Accessibility Attributes
+      const label = isLampOn
+        ? "Plant-lamp is glowing. Press Enter or Space to turn lamp off."
+        : "Plant-lamp is off. Press Enter or Space to turn lamp on.";
+      lampGroup.setAttribute('aria-label', label);
+      lampGroup.setAttribute('aria-pressed', isLampOn ? 'true' : 'false');
+
+      // Update Live Status Pill
+      if (isLampOn) {
+        lampStatusText.textContent = "Light ON · Click plant-lamp to toggle";
+      } else {
+        lampStatusText.textContent = "Light OFF · Click plant-lamp to toggle";
+      }
+
+      // Play soft mechanical click sound
+      playSwitchSound(isLampOn);
+    }
+
+    // Attach Click and Keyboard Listeners to the Plant-Lamp assembly
+    lampGroup.addEventListener('click', toggleLamp);
+    lampGroup.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        toggleLamp(e);
+      }
+    });
+
+    // Also allow clicking the base switch directly
+    if (lampSwitchNode) {
+      lampSwitchNode.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleLamp(e);
+      });
+    }
+
+    // Also allow clicking the status pill
+    if (lampStatusPill) {
+      lampStatusPill.addEventListener('click', toggleLamp);
+    }
+
+    // "Begin Exploring" Button Action (Modal Trigger)
+    if (btnExplore && exploreModal) {
+      btnExplore.addEventListener('click', () => {
+        exploreModal.classList.add('open');
+        btnDismissModal.focus();
+        playSwitchSound(true);
+      });
+    }
+
+    // Dismiss Modal Actions
+    function closeModal() {
+      exploreModal.classList.remove('open');
+      btnExplore.focus();
+    }
+
+    if (btnDismissModal) {
+      btnDismissModal.addEventListener('click', closeModal);
+    }
+
+    if (exploreModal) {
+      exploreModal.addEventListener('click', (e) => {
+        if (e.target === exploreModal) closeModal();
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && exploreModal && exploreModal.classList.contains('open')) {
+        closeModal();
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>

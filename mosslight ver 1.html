@@ -5,353 +5,445 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4eedc">
 <title>Mosslight — A Little Physics Lab</title>
-<style>
-  :root { --paper:#f4eedc; --paper2:#fffaf0; --ink:#263d36; --muted:#6d7b6e; --moss:#65866d; --moss-dark:#3d6653; --blue:#91b9bd; --rose:#d99980; --line:#d8d3bc; --gold:#e7bd67; }
-  * { box-sizing:border-box; }
-  body { margin:0; color:var(--ink); background:radial-gradient(circle at 8% 4%,#fffdf4 0 10%,transparent 32%),linear-gradient(180deg,#eef0df 0%,var(--paper) 45%,#e8e3cf 100%); font-family:ui-rounded,"Trebuchet MS",system-ui,-apple-system,sans-serif; }
-  button, input { font:inherit; }
-  button { cursor:pointer; }
-  .shell { max-width:1280px; margin:0 auto; padding:24px clamp(14px,3vw,38px) 40px; }
-  .masthead { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:20px; }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .brand-mark { width:48px;height:48px;border-radius:18px 18px 18px 7px;background:#66866e;display:grid;place-items:center;color:#fff9e7;box-shadow:0 4px 0 #46634e;transform:rotate(-3deg);font-size:25px; }
-  .eyebrow { text-transform:uppercase;letter-spacing:.16em;font-size:10px;font-weight:900;color:#768470; }
-  h1 { margin:2px 0 0;font-size:clamp(24px,4vw,38px);letter-spacing:-.045em;line-height:1.04; }
-  .top-note { font-size:12px; color:var(--muted); border:1px solid #d5d4bd; background:#fff9e5a6; padding:10px 14px; border-radius:999px; max-width:330px; text-align:center; }
-  .intro { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:12px; margin:0 2px 16px; }
-  .intro p { margin:6px 0 0; color:#69796e; max-width:740px; line-height:1.55; font-size:14px; }
-  .issue { font-size:11px;font-weight:900;letter-spacing:.1em;color:#8b7c5c;background:#f9edcf;border:1px dashed #cbbb8d;border-radius:10px;padding:9px 12px;white-space:nowrap; }
-  .workspace { display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:18px;align-items:start; }
-  .card { background:var(--paper2); border:1px solid #dad5be; border-radius:20px; box-shadow:0 5px 0 rgba(71,84,59,.07),0 18px 50px rgba(70,78,54,.06); overflow:hidden; }
-  .scene-top { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 17px;border-bottom:1px solid #e5dfc8;background:#fffcf2; }
-  .scene-top strong { font-size:13px;letter-spacing:.02em; }
-  .status { display:flex;align-items:center;gap:7px;font-size:11px;color:#66796b;font-weight:800; }
-  .dot { width:7px;height:7px;background:#7fa77b;border-radius:50%;box-shadow:0 0 0 3px #e2ebd7; }
-  canvas { display:block;width:100%;height:auto;aspect-ratio:960/540;background:#c8d9ce; }
-  .scene-foot { display:flex;flex-wrap:wrap;gap:9px;justify-content:space-between;align-items:center;padding:10px 15px 13px;background:#fffdf4;border-top:1px solid #e9e3ce;color:#74816f;font-size:11px; }
-  .keycaps { display:flex;gap:5px;align-items:center; }
-  kbd { background:#f1ecdc;border:1px solid #d7d1b9;border-bottom-width:2px;border-radius:5px;padding:2px 5px;font-size:10px;color:#4c6255; }
-  .panel-head { padding:18px 18px 13px;border-bottom:1px solid #e6dfc9; }
-  h2 { margin:0;font-size:18px;letter-spacing:-.025em; }
-  .sub { color:#788271;font-size:12px;line-height:1.45;margin:6px 0 0; }
-  .controls { padding:16px 18px;display:grid;gap:16px; }
-  .control { display:grid;gap:7px; }
-  .control-label { display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:12px;font-weight:850; }
-  .readout { font-weight:900;color:#50735b;background:#edf0dd;padding:3px 7px;border-radius:7px;font-variant-numeric:tabular-nums;white-space:nowrap; }
-  input[type=range] { appearance:none;width:100%;height:5px;border-radius:999px;background:#d9dec8;outline:none; }
-  input[type=range]::-webkit-slider-thumb { appearance:none;width:17px;height:17px;border-radius:50%;background:#63896d;border:3px solid #fff9e8;box-shadow:0 0 0 1px #63896d; }
-  input[type=range]::-moz-range-thumb { width:12px;height:12px;border-radius:50%;background:#63896d;border:3px solid #fff9e8;box-shadow:0 0 0 1px #63896d; }
-  .hint { color:#879080;font-size:10px;line-height:1.4;margin-top:-1px; }
-  .rule { height:1px;background:#e7e0ca; }
-  .btn-row { display:grid;grid-template-columns:1.2fr .8fr;gap:9px; }
-  .btn { border:0;border-radius:11px;padding:12px 10px;font-size:12px;font-weight:900;letter-spacing:.01em;transition:transform .12s,filter .12s; }
-  .btn:active { transform:translateY(2px); }
-  .btn-primary { color:#fff9e8;background:#52785e;box-shadow:0 4px 0 #355541; }
-  .btn-secondary { color:#4d6755;background:#e7ebd9;border:1px solid #cdd7c3; }
-  .btn:disabled { opacity:.5;cursor:not-allowed;transform:none; }
-  .statusline { background:#f2f0df;border:1px solid #e1ddc6;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;color:#6f7c6b; }
-  .statusline strong { color:#4f7059;font-size:12px;font-variant-numeric:tabular-nums; }
-  .experiment-note { margin:0 18px 18px;background:#fff2d7;border:1px solid #ead4a1;padding:12px;border-radius:12px;color:#786845;font-size:11px;line-height:1.5; }
-  .lower-grid { display:grid;grid-template-columns:1.2fr 1fr;gap:18px;margin-top:18px; }
-  .section-title { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px 11px; }
-  .section-title h2 { font-size:16px; }
-  .tiny-tag { font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#78816a;background:#edf0df;border-radius:7px;padding:5px 7px; }
-  .results-body { padding:0 17px 17px; }
-  .metrics { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 13px; }
-  .metric { background:#f6f2e4;border:1px solid #e5dfc9;border-radius:11px;padding:10px;min-width:0; }
-  .metric span { display:block;color:#869080;font-size:10px;font-weight:800;margin-bottom:5px; }
-  .metric strong { display:block;font-size:17px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;white-space:nowrap; }
-  .results-empty { color:#899080;background:#f7f4e9;border:1px dashed #d8d4c0;padding:15px;border-radius:10px;font-size:12px;line-height:1.5; }
-  .table-wrap { overflow-x:auto; }
-  table { width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap; }
-  th,td { text-align:left;padding:9px 7px;border-bottom:1px solid #ebe5d2; }
-  th { color:#87907b;font-size:9px;text-transform:uppercase;letter-spacing:.08em; }
-  td { color:#53675a;font-variant-numeric:tabular-nums; }
-  .empty-row { color:#909581;text-align:center;padding:15px;white-space:normal; }
-  .notebook-body { padding:0 17px 17px; }
-  .formula { padding:11px 12px;background:#e8efe0;border:1px solid #d3dec8;border-radius:11px;margin-bottom:10px; }
-  .formula .eq { font-family:Georgia,serif;font-size:22px;letter-spacing:.01em;color:#3c634b; }
-  .formula .small { margin-top:5px;font-size:10px;color:#72836e;line-height:1.45; }
-  .fact-list { display:grid;gap:9px; }
-  .fact { display:grid;grid-template-columns:23px 1fr;gap:8px;font-size:11px;line-height:1.5;color:#6f7d6a; }
-  .fact .leaf { width:22px;height:22px;border-radius:7px;background:#f4e8c9;display:grid;place-items:center; }
-  .footer { padding:23px 4px 0;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;color:#879080;font-size:10px;line-height:1.5; }
-  .toast { position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#345a44;color:#fffbea;padding:10px 16px;border-radius:999px;box-shadow:0 7px 25px #2a40353b;font-size:12px;font-weight:800;transition:all .22s;z-index:10;max-width:90vw;text-align:center; }
-  .toast.show { opacity:1;transform:translate(-50%,0); }
-  @media(max-width:850px) { .workspace{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr;align-items:start}.controls .btn-row,.controls .rule,.controls .statusline{grid-column:1/-1}.experiment-note{margin-top:0}.lower-grid{grid-template-columns:1fr} }
-  @media(max-width:540px) { .shell{padding:14px 10px 28px}.masthead{align-items:flex-start}.top-note{display:none}.workspace{gap:12px}.controls{grid-template-columns:1fr}.controls .btn-row,.controls .rule,.controls .statusline{grid-column:auto}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.metric{padding:8px}.metric strong{font-size:14px}.scene-top{padding:11px 12px}.scene-foot{font-size:10px}.lower-grid{gap:12px} }
-  @media(prefers-reduced-motion:reduce) { *{transition:none!important} }
-</style>
+<link rel="stylesheet" href="css/mosslight.css">
 </head>
 <body>
 <div class="shell">
+  <!-- Masthead with Branding, Customization Button, and Lo-Fi Audio Player -->
   <header class="masthead">
-    <div class="brand"><div class="brand-mark" aria-hidden="true">✿</div><div><div class="eyebrow">Mosslight Field School</div><h1>A Little Physics Lab</h1></div></div>
-    <div class="top-note">A quiet place for curious minds · build 0.1</div>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">✿</div>
+      <div>
+        <div class="eyebrow">Mosslight Field School</div>
+        <h1>A Little Physics Lab</h1>
+      </div>
+    </div>
+
+    <div class="masthead-actions">
+      <!-- Wardrobe Customisation Button -->
+      <button class="btn-wardrobe" id="btnOpenWardrobe" aria-haspopup="dialog" aria-controls="wardrobeModal">
+        <span aria-hidden="true">🎨</span>
+        <span>Customize Character</span>
+      </button>
+
+      <!-- Cozy Lo-Fi Music & Ambience Toolbar -->
+      <div class="audio-player-bar" id="audioPlayerBar" role="region" aria-label="Lo-Fi audio player">
+        <button class="btn-audio-play" id="btnAudioPlay" aria-label="Play lo-fi study music" title="Play Lo-Fi Music">▶</button>
+        <div class="audio-bars" aria-hidden="true">
+          <div class="audio-bar-stem"></div>
+          <div class="audio-bar-stem"></div>
+          <div class="audio-bar-stem"></div>
+          <div class="audio-bar-stem"></div>
+        </div>
+
+        <div class="audio-group">
+          <label for="musicVolSlider">Music</label>
+          <input id="musicVolSlider" type="range" min="0" max="1" step="0.05" value="0.65" aria-label="Music volume">
+        </div>
+
+        <div class="audio-group">
+          <label for="ambienceVolSlider">Ambience</label>
+          <input id="ambienceVolSlider" type="range" min="0" max="1" step="0.05" value="0.55" aria-label="Ambience volume">
+        </div>
+
+        <select id="audioMoodSelect" class="audio-mood-select" aria-label="Atmosphere mood">
+          <option value="sunny">☀️ Sunny Lab</option>
+          <option value="rainy">🌧️ Rainy Study</option>
+          <option value="breezy">🍃 Breezy Day</option>
+        </select>
+
+        <button class="btn-audio-mute" id="btnAudioMute" aria-label="Mute all audio" title="Toggle Mute">🔊</button>
+      </div>
+    </div>
   </header>
+
+  <!-- Field Intro Note -->
   <div class="intro">
-    <div><div class="eyebrow">Practical 001 · Motion & measurement</div><p>Welcome to the garden laboratory. Set up a pendulum, release it, and collect a reading. A little breeze is lovely—but it can make careful measurements harder.</p></div>
+    <div>
+      <div class="eyebrow">Practical 001 · Pendulum Motion & Experimental Uncertainty</div>
+      <p>Welcome to the garden laboratory. Adjust physical parameters, explore how cross-breezes and bench vibrations influence real-world measurements, and compare actual stopwatch readings with theoretical predictions.</p>
+    </div>
     <div class="issue">FIELD NOTE No. 001</div>
   </div>
 
   <main>
-    <section class="workspace" aria-label="Pendulum experiment">
+    <!-- Experiment Workspace -->
+    <section class="workspace" aria-label="Pendulum experiment laboratory">
+      <!-- Left Column: Canvas Scene -->
       <article class="card scene-card">
-        <div class="scene-top"><strong>THE GREENHOUSE LAB</strong><span class="status"><span class="dot"></span><span id="sceneStatus">Ready when you are</span></span></div>
-        <canvas id="scene" width="960" height="540" aria-label="A cozy 2D greenhouse laboratory with a moving pendulum and a student character"></canvas>
-        <div class="scene-foot"><span id="characterHint">Walk over and say hello to the lab assistant.</span><span class="keycaps"><kbd>←</kbd><kbd>→</kbd> walk <kbd>E</kbd> inspect <kbd>Space</kbd> release</span></div>
+        <div class="scene-top">
+          <strong>THE GREENHOUSE LAB</strong>
+          <span class="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="sceneStatus">Ready when you are</span>
+          </span>
+        </div>
+
+        <canvas id="scene" width="960" height="540" aria-label="A cozy 2D greenhouse laboratory with a swinging pendulum and a customizable student assistant character"></canvas>
+
+        <div class="scene-foot">
+          <span id="characterHint">Walk over to the lab bench and press E to inspect.</span>
+          <span class="keycaps">
+            <kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> walk
+            <kbd>E</kbd> inspect
+            <kbd>Space</kbd> release & measure
+          </span>
+        </div>
       </article>
 
+      <!-- Right Column: Experiment Controls -->
       <article class="card control-card">
-        <div class="panel-head"><div class="eyebrow">Set up your practical</div><h2>The pendulum experiment</h2><p class="sub">Change one variable at a time. For a fair test, keep the other settings steady.</p></div>
-        <div class="controls">
-          <div class="control"><div class="control-label"><label for="length">String length</label><span class="readout" id="lengthRead">0.65 m</span></div><input id="length" type="range" min="0.25" max="1.20" step="0.05" value="0.65"><div class="hint">Pivot to the centre of the bob.</div></div>
-          <div class="control"><div class="control-label"><label for="angle">Release angle</label><span class="readout" id="angleRead">15°</span></div><input id="angle" type="range" min="5" max="35" step="1" value="15"><div class="hint">Measured from the vertical resting position.</div></div>
-          <div class="control"><div class="control-label"><label for="mass">Bob mass</label><span class="readout" id="massRead">80 g</span></div><input id="mass" type="range" min="20" max="200" step="10" value="80"><div class="hint">In the ideal model, mass does not change the period.</div></div>
-          <div class="rule"></div>
-          <div class="control"><div class="control-label"><label for="wind">Cross-breeze</label><span class="readout" id="windRead">10%</span></div><input id="wind" type="range" min="0" max="100" step="5" value="10"><div class="hint">A changing sideways force can disturb the swing.</div></div>
-          <div class="control"><div class="control-label"><label for="noise">Lab disturbance</label><span class="readout" id="noiseRead">5%</span></div><input id="noise" type="range" min="0" max="100" step="5" value="5"><div class="hint">Models small bench vibrations and stopwatch distraction—not sound magically changing gravity.</div></div>
-          <div class="btn-row"><button class="btn btn-primary" id="startBtn">▶ Release & measure 10 periods</button><button class="btn btn-secondary" id="resetBtn">↺ Reset</button></div>
-          <div class="statusline"><span id="trialStatus">No trial running</span><strong id="periodCount">0 / 10</strong></div>
+        <div class="panel-head">
+          <div class="eyebrow">Interactive Experiment Controls</div>
+          <h2>The Pendulum Practical</h2>
+          <p class="sub">Change one variable at a time. Enter exact numbers or drag sliders to see real-time updates.</p>
         </div>
-        <div class="experiment-note"><strong>Today's question:</strong> Does changing the string length change the time for one complete swing? Try three lengths and compare your notebook readings.</div>
+
+        <div class="controls-body">
+          <!-- SECTION 1: Experiment Setup & Triggers -->
+          <div class="section-header"><span>🧪</span> Experiment Setup</div>
+          <div class="action-grid">
+            <button class="btn btn-primary" id="startBtn">▶ Release & measure 10 periods</button>
+            <div class="btn-row-dual">
+              <button class="btn btn-secondary" id="resetExpBtn" title="Reset pendulum position without altering chosen parameters">↺ Reset Experiment</button>
+              <button class="btn btn-secondary" id="resetDefBtn" title="Restore all parameters to standard laboratory defaults">↺ Reset to Defaults</button>
+            </div>
+            <div class="statusline">
+              <span id="trialStatus">No trial running</span>
+              <strong id="periodCount">0 / 10</strong>
+            </div>
+          </div>
+
+          <!-- SECTION 2: Physical Parameters -->
+          <div class="section-header"><span>📐</span> Physical Parameters</div>
+
+          <!-- 1. String Length -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="lenNum">String length (L)</label>
+              <span class="readout-badge" id="lenRead">0.65 m (65 cm)</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="lenRange" type="range" min="0.10" max="2.50" step="0.01" value="0.65" aria-label="String length slider">
+              <input id="lenNum" class="num-input" type="number" min="0.10" max="2.50" step="0.01" value="0.65" aria-label="String length in metres">
+              <span class="unit-badge">m</span>
+            </div>
+            <div class="control-hint" id="lenHint">Distance from pivot to center of bob. Range: 0.10 m – 2.50 m.</div>
+          </div>
+
+          <!-- 2. Release Angle -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="angNum">Release angle (θ₀)</label>
+              <span class="readout-badge" id="angRead">15°</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="angRange" type="range" min="1" max="45" step="1" value="15" aria-label="Release angle slider">
+              <input id="angNum" class="num-input" type="number" min="1" max="45" step="1" value="15" aria-label="Release angle in degrees">
+              <span class="unit-badge">°</span>
+            </div>
+            <div class="control-hint" id="angHint">Initial displacement from vertical. Small angles (≤ 15°) best fit T ≈ 2π√(L/g).</div>
+            <div class="control-alert" id="angAlert" hidden></div>
+          </div>
+
+          <!-- 3. Bob Mass -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="massNum">Bob mass (m)</label>
+              <span class="readout-badge" id="massRead">80 g (0.080 kg)</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="massRange" type="range" min="10" max="1000" step="5" value="80" aria-label="Bob mass slider">
+              <input id="massNum" class="num-input" type="number" min="10" max="1000" step="5" value="80" aria-label="Bob mass in grams">
+              <span class="unit-badge">g</span>
+            </div>
+            <div class="control-hint" id="massHint">Ideal simple pendulum period is independent of mass. In air, mass alters wind drag inertia.</div>
+          </div>
+
+          <!-- 4. Gravitational Acceleration -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="gravNum">Gravitational acceleration (g)</label>
+              <span class="readout-badge" id="gravRead">9.81 m/s²</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="gravRange" type="range" min="1.00" max="25.00" step="0.01" value="9.81" aria-label="Gravity slider">
+              <input id="gravNum" class="num-input" type="number" min="1.00" max="25.00" step="0.01" value="9.81" aria-label="Gravity in metres per second squared">
+              <span class="unit-badge">m/s²</span>
+            </div>
+            <div class="preset-pills">
+              <button class="btn-preset active" data-g="9.81">Earth (9.81)</button>
+              <button class="btn-preset" data-g="1.62">Moon (1.62)</button>
+              <button class="btn-preset" data-g="3.72">Mars (3.72)</button>
+              <button class="btn-preset" data-g="24.79">Jupiter (24.79)</button>
+            </div>
+            <div class="control-hint" id="gravHint">Downward gravitational acceleration. Earth standard is ~9.81 m/s².</div>
+          </div>
+
+          <!-- 5. Air Damping -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="dampNum">Damping coefficient (γ)</label>
+              <span class="readout-badge" id="dampRead">0.012 s⁻¹</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="dampRange" type="range" min="0.000" max="0.100" step="0.001" value="0.012" aria-label="Damping coefficient slider">
+              <input id="dampNum" class="num-input" type="number" min="0.000" max="0.100" step="0.001" value="0.012" aria-label="Damping coefficient in inverse seconds">
+              <span class="unit-badge">s⁻¹</span>
+            </div>
+            <div class="control-hint" id="dampHint">Viscous air drag opposing motion. 0.000 = vacuum; 0.012 = calm indoor air.</div>
+          </div>
+
+          <!-- SECTION 3: Environmental Conditions -->
+          <div class="section-header"><span>🍃</span> Environmental Conditions</div>
+
+          <!-- 6. Cross-Breeze Wind -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="windNum">Cross-breeze strength</label>
+              <span class="readout-badge" id="windRead">10% (~1.0 m/s)</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="windRange" type="range" min="0" max="100" step="1" value="10" aria-label="Wind strength slider">
+              <input id="windNum" class="num-input" type="number" min="0" max="100" step="1" value="10" aria-label="Wind strength percentage">
+              <span class="unit-badge">%</span>
+            </div>
+            <div class="control-hint" id="windHint">Unsteady lateral breeze through greenhouse windows. 100% ≈ 10 m/s wind gust.</div>
+          </div>
+
+          <!-- 7. Lab Disturbance -->
+          <div class="control-item">
+            <div class="control-item-header">
+              <label for="noiseNum">Lab disturbance / Vibration</label>
+              <span class="readout-badge" id="noiseRead">5%</span>
+            </div>
+            <div class="dual-input-row">
+              <input id="noiseRange" type="range" min="0" max="100" step="1" value="5" aria-label="Lab disturbance slider">
+              <input id="noiseNum" class="num-input" type="number" min="0" max="100" step="1" value="5" aria-label="Lab disturbance percentage">
+              <span class="unit-badge">%</span>
+            </div>
+            <div class="control-hint" id="noiseHint">Combines workbench micro-tremors and human stopwatch reaction-time uncertainty.</div>
+          </div>
+
+          <!-- SECTION 4: Measurement Settings -->
+          <div class="section-header"><span>⏱</span> Measurement Settings</div>
+          <div class="control-hint" style="background:#f4f0df;padding:10px 12px;border-radius:10px;border:1px solid #ddd6bf;">
+            <strong>Fixed 10-Period Timing Protocol:</strong> In physics practicals, timing 10 complete periods and dividing by 10 dramatically reduces human stopwatch reaction error compared to timing a single swing.
+          </div>
+        </div>
+
+        <div class="experiment-note">
+          <strong>Today's question:</strong> Does changing the string length change the time for one complete swing? Try three lengths and compare your notebook readings.
+        </div>
       </article>
     </section>
 
+    <!-- Lower Grid: Notebook & The Science -->
     <section class="lower-grid">
+      <!-- Field Notebook Card -->
       <article class="card">
-        <div class="section-title"><h2>Your field notebook</h2><span class="tiny-tag">Trial log</span></div>
+        <div class="section-title">
+          <h2>Your Field Notebook</h2>
+          <div class="title-actions">
+            <button class="btn btn-tertiary" id="btnExportCsv" title="Download trial readings as CSV file">📥 Export CSV</button>
+            <button class="btn btn-tertiary" id="btnClearLog" title="Clear notebook history">🗑️ Clear</button>
+            <span class="tiny-tag">Trial log</span>
+          </div>
+        </div>
+
         <div class="results-body">
-          <div id="latestMetrics" class="results-empty">Your first reading will appear here after the pendulum completes 10 periods. Compare the measured result with the ideal prediction.</div>
-          <div id="logWrap" class="table-wrap" hidden><table><thead><tr><th>Trial</th><th>Length</th><th>Ideal T</th><th>Measured T</th><th>Error</th></tr></thead><tbody id="logBody"></tbody></table></div>
+          <div id="latestMetrics" class="results-empty">
+            Your first reading will appear here after the pendulum completes 10 periods. Compare your measured stopwatch result with theoretical predictions.
+          </div>
+
+          <div id="logWrap" class="table-wrap" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th>Trial</th>
+                  <th>Length</th>
+                  <th>Angle</th>
+                  <th>Mass</th>
+                  <th>Gravity</th>
+                  <th>Ideal T</th>
+                  <th>Measured T</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody id="logBody"></tbody>
+            </table>
+          </div>
         </div>
       </article>
+
+      <!-- The Science Card -->
       <article class="card">
-        <div class="section-title"><h2>A note from the notebook</h2><span class="tiny-tag">The science</span></div>
+        <div class="section-title">
+          <h2>A Note from the Notebook</h2>
+          <span class="tiny-tag">The Science</span>
+        </div>
+
         <div class="notebook-body">
-          <div class="formula"><div class="eyebrow">Small-angle prediction</div><div class="eq">T ≈ 2π √(L / g)</div><div class="small">T = period in seconds · L = string length in metres · g ≈ 9.81 m/s²</div></div>
+          <div class="formula">
+            <div class="eyebrow">Small-Angle Theory</div>
+            <div class="eq">T ≈ 2π √(L / g)</div>
+            <div class="small" id="idealEqDisplay">
+              T = period in seconds · L = string length in metres · g ≈ 9.81 m/s²
+            </div>
+          </div>
+
           <div class="fact-list">
-            <div class="fact"><div class="leaf">🌿</div><div><strong>Longer string, longer period.</strong> The bob takes more time to complete one swing when the string is longer.</div></div>
-            <div class="fact"><div class="leaf">⚖</div><div><strong>Mass is not the secret.</strong> In an ideal simple pendulum, changing bob mass does not change its period.</div></div>
-            <div class="fact"><div class="leaf">🍃</div><div><strong>Real rooms are not perfect.</strong> Wind, vibration, damping and human reaction time can make a measured result differ from the ideal formula.</div></div>
+            <div class="fact">
+              <div class="leaf">🌿</div>
+              <div>
+                <strong>Longer string, longer period.</strong> The period T increases with the square root of length (T ∝ √L). Quadrupling string length doubles the period.
+              </div>
+            </div>
+
+            <div class="fact">
+              <div class="leaf">⚖</div>
+              <div>
+                <strong>Mass is not the secret.</strong> In an ideal simple pendulum, gravitational force and inertia both scale directly with mass (F = mg = ma), so mass cancels out completely!
+              </div>
+            </div>
+
+            <div class="fact">
+              <div class="leaf">🍃</div>
+              <div>
+                <strong>Real rooms are not perfect.</strong> Cross-breezes, mechanical bench vibrations, air resistance, and human reaction time create realistic experimental variance.
+              </div>
+            </div>
+
+            <div class="fact">
+              <div class="leaf">📐</div>
+              <div>
+                <strong>Finite-angle correction.</strong> For larger angles (θ > 15°), the restoring force is non-linear (-g/L sin θ). The true period is slightly longer: T ≈ T₀(1 + 1/16 θ₀²).
+              </div>
+            </div>
           </div>
         </div>
       </article>
     </section>
   </main>
-  <footer class="footer"><span>Original prototype · warm, hand-drawn 2D look · intentionally stepped character animation</span><span>Educational model, not calibrated laboratory equipment.</span></footer>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>Original prototype · Cozy hand-drawn 2D aesthetic · Stepped chibi character animation</span>
+    <span>Web Audio API procedural lo-fi soundtrack · Educational physics simulator</span>
+  </footer>
 </div>
+
+<!-- Character Wardrobe Customisation Modal -->
+<div class="modal-overlay" id="wardrobeModal" role="dialog" aria-modal="true" aria-labelledby="wardrobeTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">Character Studio</div>
+        <h2 id="wardrobeTitle">Customize Your Student Assistant</h2>
+      </div>
+      <button class="btn-close-modal" id="btnCloseWardrobe" aria-label="Close customisation modal">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Left Column: Live Preview & Pose Toggles -->
+      <div class="preview-col">
+        <canvas id="wardrobePreview" width="220" height="260" aria-label="Character preview"></canvas>
+        <div class="preview-poses">
+          <button class="btn-pose active" data-pose="idle">Idle</button>
+          <button class="btn-pose" data-pose="walking">Walk</button>
+          <button class="btn-pose" data-pose="celebrating">Celebrate</button>
+        </div>
+        <div class="control-hint" style="text-align:center;">
+          Previewing your hand-drawn chibi student. Changes appear instantly in the laboratory.
+        </div>
+      </div>
+
+      <!-- Right Column: Wardrobe Options -->
+      <div class="custom-options-col">
+        <!-- Appearance Options -->
+        <div class="custom-group">
+          <label for="skinSelect">Skin Tone</label>
+          <select id="skinSelect" class="custom-select" data-field="skinTone"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="hairStyleSelect">Hairstyle</label>
+          <select id="hairStyleSelect" class="custom-select" data-field="hairStyle"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="hairColorSelect">Hair Colour</label>
+          <select id="hairColorSelect" class="custom-select" data-field="hairColor"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="eyeColorSelect">Eye Colour</label>
+          <select id="eyeColorSelect" class="custom-select" data-field="eyeColor"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="eyeStyleSelect">Eye Expression</label>
+          <select id="eyeStyleSelect" class="custom-select" data-field="eyeStyle"></select>
+        </div>
+
+        <!-- Clothing Options -->
+        <div class="custom-group">
+          <label for="topSelect">Top & Sweater</label>
+          <select id="topSelect" class="custom-select" data-field="top"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="bottomSelect">Lower Body (Skirts / Pants)</label>
+          <select id="bottomSelect" class="custom-select" data-field="bottom"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="outerwearSelect">Lab Coat / Apron / Vest</label>
+          <select id="outerwearSelect" class="custom-select" data-field="outerwear"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="colorSelect">Clothing Colour Palette</label>
+          <select id="colorSelect" class="custom-select" data-field="clothingColor"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="shoeSelect">Footwear</label>
+          <select id="shoeSelect" class="custom-select" data-field="shoes"></select>
+        </div>
+
+        <!-- Science Accessories -->
+        <div class="custom-group">
+          <label for="accSelect">Head Accessory & Glasses</label>
+          <select id="accSelect" class="custom-select" data-field="accessory"></select>
+        </div>
+
+        <div class="custom-group">
+          <label for="handSelect">Handheld Science Tool</label>
+          <select id="handSelect" class="custom-select" data-field="handheld"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="modal-foot">
+      <div class="modal-foot-left">
+        <button class="btn btn-secondary" id="btnRandomWardrobe">🎲 Surprise Me</button>
+        <button class="btn btn-secondary" id="btnDefaultWardrobe">↺ Default Look</button>
+      </div>
+      <button class="btn btn-primary" id="btnSaveWardrobe">✓ Save & Enter Lab</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-(() => {
-  'use strict';
-  const canvas = document.getElementById('scene');
-  const ctx = canvas.getContext('2d');
-  const $ = (id) => document.getElementById(id);
-  const controls = { length:$('length'), angle:$('angle'), mass:$('mass'), wind:$('wind'), noise:$('noise') };
-  const readouts = { length:$('lengthRead'), angle:$('angleRead'), mass:$('massRead'), wind:$('windRead'), noise:$('noiseRead') };
-  const startBtn = $('startBtn'), resetBtn = $('resetBtn');
-  const state = {
-    theta: 15*Math.PI/180, omega:0, simTime:0, running:false, paused:false,
-    peakStart:null, completed:0, measuredElapsed:0, lastPeakAt:null, prevOmega:0,
-    currentTrial:0, log:[], trialLength:.65, trialAngle:15, trialMass:80, trialWind:10, trialNoise:5,
-    playerX:142, playerDirection:1, keys:{}, toastTimer:null, lastCharFrame:0, charFrame:0,
-    bubbleText:'', bubbleUntil:0, sceneMessage:'Ready when you are', lastTimestamp:0
-  };
-  const W=960,H=540, PIVOT={x:585,y:114}, SCALE=170, SIM_SPEED=2.2;
-  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-  const idealPeriod=(L)=>2*Math.PI*Math.sqrt(L/9.81);
-  const getLength=()=>Number(controls.length.value);
-  const getAngle=()=>Number(controls.angle.value);
-  const getMass=()=>Number(controls.mass.value);
-  const getWind=()=>Number(controls.wind.value);
-  const getNoise=()=>Number(controls.noise.value);
-  function refreshReadouts(){
-    readouts.length.textContent=getLength().toFixed(2)+' m';
-    readouts.angle.textContent=getAngle()+'°';
-    readouts.mass.textContent=getMass()+' g';
-    readouts.wind.textContent=getWind()+'%';
-    readouts.noise.textContent=getNoise()+'%';
-  }
-  function toast(message){ const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>el.classList.remove('show'),2400); }
-  function setStatus(msg){ state.sceneMessage=msg;$('sceneStatus').textContent=msg; }
-  function rr(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()} }
-  function line(x1,y1,x2,y2,color,width=2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.stroke()}
-  function ellipse(x,y,rx,ry,fill,stroke){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}}
-  function circle(x,y,r,fill,stroke){ellipse(x,y,r,r,fill,stroke)}
-  function polygon(points,fill,stroke){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}}
-  function drawBackground(t){
-    const sky=ctx.createLinearGradient(0,0,0,380);sky.addColorStop(0,'#b9d7d2');sky.addColorStop(.6,'#e4e6ca');sky.addColorStop(1,'#f4e5bd');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-    // Soft watercolor-like sun and clouds.
-    circle(142,91,35,'#f3dba0');circle(142,91,44,'rgba(246,226,177,.25)');
-    ctx.globalAlpha=.62;ellipse(271,90,52,16,'#f4f1d9');ellipse(306,85,32,14,'#f4f1d9');ellipse(238,97,27,12,'#f4f1d9');ctx.globalAlpha=1;
-    // Rolling hills beyond the greenhouse windows.
-    polygon([[0,282],[0,239],[96,184],[178,231],[267,169],[370,235],[460,186],[550,246],[651,190],[767,236],[859,173],[960,230],[960,350],[0,350]],'#a7c5a5');
-    polygon([[0,307],[0,272],[93,237],[174,271],[280,220],[379,283],[484,237],[599,284],[715,230],[810,269],[902,220],[960,251],[960,360],[0,360]],'#7fa58a');
-    // Small distant trees.
-    for(let i=0;i<19;i++){const x=i*55+((i%3)*7), y=296+(i%4)*7, h=24+(i%4)*10;polygon([[x,y],[x-13,y+h],[x+13,y+h]],i%2?'#749a7d':'#6f9279')}
-    // Greenhouse beams and glass panes.
-    ctx.fillStyle='rgba(252,248,226,.23)';ctx.fillRect(28,24,904,324);
-    ctx.strokeStyle='#f4edcf';ctx.lineWidth=13;ctx.strokeRect(26,20,908,330);
-    line(320,25,320,350,'#f4edcf',10);line(650,25,650,350,'#f4edcf',10);line(29,183,930,183,'#f4edcf',9);line(28,350,933,350,'#f4edcf',11);
-    // Vines around the window frame.
-    ctx.strokeStyle='#64876c';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(53,38);ctx.bezierCurveTo(70,91,40,112,78,151);ctx.bezierCurveTo(96,174,71,200,100,218);ctx.stroke();
-    for(let i=0;i<6;i++){let x=64+(i%2)*24+(i*2),y=69+i*24;ctx.save();ctx.translate(x,y);ctx.rotate((i%2?-.8:.6));ellipse(0,0,9,4,'#719a72');ctx.restore()}
-    ctx.strokeStyle='#64876c';ctx.beginPath();ctx.moveTo(910,42);ctx.bezierCurveTo(874,70,916,118,874,150);ctx.bezierCurveTo(847,177,888,208,850,233);ctx.stroke();
-    for(let i=0;i<5;i++){ctx.save();ctx.translate(893-(i%2)*26,74+i*30);ctx.rotate(i%2?-.8:.7);ellipse(0,0,10,4,'#719a72');ctx.restore()}
-    // Floor boards.
-    polygon([[0,350],[960,350],[960,540],[0,540]],'#d8bb8d');
-    for(let y=373;y<545;y+=36)line(0,y,960,y,'#c7a778',2);
-    for(let x=42;x<960;x+=145)line(x,350,x-26,540,'#c7a778',1.5);
-    // Sunlit patches.
-    polygon([[91,351],[225,351],[300,540],[204,540]],'rgba(255,240,186,.24)');polygon([[700,350],[797,350],[856,540],[790,540]],'rgba(255,240,186,.17)');
-    // Low shelves and plants.
-    rr(41,284,120,70,5,'#9b7956','#806548');rr(50,296,101,8,3,'#d8b68a');
-    for(const p of [{x:76,y:281,s:1},{x:121,y:279,s:.85},{x:901,y:297,s:1.1}]){
-      ellipse(p.x,p.y+9,18*p.s,8*p.s,'#8a6a4e');line(p.x,p.y+8,p.x,p.y-22*p.s,'#527d5a',3);
-      for(let k=0;k<5;k++){let yy=p.y-20*p.s+k*5*p.s;ctx.save();ctx.translate(p.x+(k%2?8:-8)*p.s,yy);ctx.rotate(k%2?.55:-.55);ellipse(0,0,10*p.s,4*p.s,k%2?'#65946c':'#82a66f');ctx.restore()}
-    }
-    // Little shelves of jars.
-    rr(760,274,134,10,4,'#a27e56');for(let i=0;i<4;i++){rr(770+i*29,242+(i%2)*5,17,30,4,['#c6dfd1','#e7d4a0','#b5cdd0','#d8a991'][i],'#8c9f83');rr(774+i*29,236+(i%2)*5,9,7,2,'#78927c')}
-  }
-  function drawTable(){
-    // Bench and its timber legs.
-    rr(313,343,562,25,6,'#a8764d','#855b3c');rr(332,364,20,128,5,'#ad8257','#855b3c');rr(842,364,20,128,5,'#ad8257','#855b3c');
-    line(339,394,855,394,'#c69a68',3);line(342,461,851,461,'#98704b',3);
-    // Potted flower.
-    polygon([[365,341],[403,341],[397,368],[371,368]],'#bb8063','#94644f');ellipse(384,340,20,6,'#6b926c');line(383,340,381,316,'#4e7755',2);ellipse(373,324,11,5,'#6d986e');ellipse(392,315,12,5,'#82a875');circle(381,309,4,'#dfb36f');
-    // Notebook and pencil.
-    ctx.save();ctx.translate(720,326);ctx.rotate(-.07);rr(-29,-14,58,31,4,'#f0e5bf','#bdaf8b');line(-20,-5,20,-5,'#c2b79a',1);line(-20,2,12,2,'#c2b79a',1);line(-20,9,17,9,'#c2b79a',1);ctx.restore();
-    line(764,319,785,307,'#d18c66',5);line(764,319,768,316,'#e6c28a',2);
-  }
-  function drawPendulum(){
-    const L=getLength(), mass=getMass(), angle=state.theta;
-    const stringPx=L*SCALE;
-    const bob={x:PIVOT.x+Math.sin(angle)*stringPx,y:PIVOT.y+Math.cos(angle)*stringPx};
-    // A sturdy oak frame with little brass details.
-    rr(PIVOT.x-8,87,16,267,5,'#aa8055','#855f41');rr(PIVOT.x-151,91,302,15,6,'#bc8f5d','#855f41');
-    circle(PIVOT.x,105,8,'#e7c878','#9a794b');circle(PIVOT.x,105,3,'#7c8d70');
-    // Ghost arc suggests the range of motion.
-    ctx.save();ctx.setLineDash([4,8]);ctx.beginPath();ctx.arc(PIVOT.x,PIVOT.y,stringPx,Math.PI/2-getAngle()*Math.PI/180,Math.PI/2+getAngle()*Math.PI/180);ctx.strokeStyle='rgba(246,245,214,.8)';ctx.lineWidth=3;ctx.stroke();ctx.restore();
-    line(PIVOT.x,PIVOT.y,bob.x,bob.y,'#5f6555',3);
-    circle(bob.x,bob.y,clamp(9+mass*.055,10,20),'#bc9660','#775e41');circle(bob.x-4,bob.y-4,3,'#f0d9a2');
-    // Measurement guide.
-    line(PIVOT.x+26,PIVOT.y,PIVOT.x+26,PIVOT.y+stringPx,'rgba(255,250,224,.65)',1.5);line(PIVOT.x+20,PIVOT.y,PIVOT.x+32,PIVOT.y,'rgba(255,250,224,.65)',1.5);line(PIVOT.x+20,PIVOT.y+stringPx,PIVOT.x+32,PIVOT.y+stringPx,'rgba(255,250,224,.65)',1.5);
-    rr(PIVOT.x+34,PIVOT.y+stringPx*.46-10,62,20,7,'rgba(255,249,222,.88)');ctx.fillStyle='#5d755d';ctx.font='bold 12px Trebuchet MS';ctx.fillText(L.toFixed(2)+' m',PIVOT.x+43,PIVOT.y+stringPx*.46+4);
-    return bob;
-  }
-  function drawCharacter(t){
-    const x=state.playerX, floor=465;
-    // Soft shadow.
-    ellipse(x,floor+2,30,7,'rgba(69,76,48,.17)');
-    // Two-frame walk: intentionally stepped, hand-drawn rather than smooth.
-    const moving=state.keys.ArrowLeft||state.keys.ArrowRight||state.keys.a||state.keys.d;
-    const f=state.charFrame%2;
-    const legShift=moving?(f?7:-7):0;
-    // Shoes and legs.
-    line(x-8,floor-18,x-11+legShift,floor-2,'#425a4c',7);line(x+8,floor-18,x+10-legShift,floor-2,'#425a4c',7);
-    ellipse(x-14+legShift,floor-1,9,4,'#604d3d');ellipse(x+10-legShift,floor-1,9,4,'#604d3d');
-    // Green overalls / apron.
-    polygon([[x-17,floor-64],[x+17,floor-64],[x+21,floor-24],[x-21,floor-24]],'#718b66','#4f6d55');
-    rr(x-10,floor-59,20,21,4,'#8fa47a','#4f6d55');
-    line(x-14,floor-55,x-23+(moving?legShift*.5:0),floor-40,'#e6b88b',7);line(x+14,floor-55,x+23-(moving?legShift*.5:0),floor-39,'#e6b88b',7);
-    // Neck and head.
-    rr(x-5,floor-75,10,12,4,'#e8b98d');circle(x,floor-88,20,'#ecc49c','#b98265');
-    // Hair cap with little tufts.
-    ellipse(x,floor-99,22,15,'#5a5545');circle(x-14,floor-96,8,'#5a5545');circle(x+10,floor-102,8,'#5a5545');polygon([[x-21,floor-97],[x-12,floor-111],[x-5,floor-101],[x+4,floor-114],[x+16,floor-101],[x+19,floor-91]],'#5a5545');
-    const blink=(Math.floor(t/3200)%5===0 && t%3200<130);
-    if(blink){line(x-8,floor-88,x-4,floor-88,'#604d3d',2);line(x+5,floor-88,x+9,floor-88,'#604d3d',2)}else{circle(x-6,floor-89,2,'#3e5149');circle(x+7,floor-89,2,'#3e5149')}
-    // Gentle cheek and smile.
-    ellipse(x-12,floor-80,4,2,'#da967d');ellipse(x+13,floor-80,4,2,'#da967d');ctx.beginPath();ctx.arc(x+1,floor-81,5,.15,1.2);ctx.strokeStyle='#9a6553';ctx.lineWidth=1.5;ctx.stroke();
-    // Little satchel.
-    line(x+14,floor-59,x+24,floor-29,'#9c7755',3);rr(x+16,floor-37,17,14,3,'#c79a62','#886b47');circle(x+24,floor-30,2,'#f0d49b');
-    if(state.bubbleText && performance.now()<state.bubbleUntil){
-      ctx.font='13px Trebuchet MS';const text=state.bubbleText;const width=Math.min(255,ctx.measureText(text).width+26);
-      rr(clamp(x-25,20,W-width-20),floor-151,width,36,11,'#fff9e8','#d9cda9');
-      ctx.fillStyle='#536b58';ctx.fillText(text,clamp(x-25,20,W-width-20)+13,floor-129);
-      polygon([[x+3,floor-115],[x+13,floor-115],[x+8,floor-106]],'#fff9e8','#d9cda9');
-    }
-  }
-  function drawWindAndFireflies(t){
-    for(let i=0;i<7;i++){
-      const x=((i*141 + t*.015*(getWind()/20+1))%1010)-20;
-      const y=120+(i*47)%195+Math.sin(t/700+i)*7;
-      ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t/400+i)*.6);ellipse(0,0,8,3,'#8eae75');line(-5,0,5,0,'#6e9165',1);ctx.restore();
-    }
-    for(let i=0;i<5;i++){let x=110+i*190,y=238+(i%3)*26+Math.sin(t/350+i)*5;circle(x,y,2.4,'rgba(255,239,160,.85)');circle(x,y,7,'rgba(255,239,160,.12)')}
-    const wind=getWind();if(wind>0){ctx.globalAlpha=wind/250;for(let i=0;i<3;i++){let x=((t*.25+i*280)%1000);line(x,247+i*27,x+28+wind*.3,239+i*27,'#f9f3d7',2)}ctx.globalAlpha=1}
-  }
-  function drawScene(t){
-    ctx.clearRect(0,0,W,H);drawBackground(t);drawWindAndFireflies(t);drawTable();drawPendulum();drawCharacter(t);
-    // Chalkboard label on the back wall.
-    rr(348,43,158,37,7,'#54745d','#3f604b');ctx.fillStyle='#fff4d2';ctx.font='bold 11px Trebuchet MS';ctx.fillText('OBSERVE · TEST · LEARN',359,65);
-    if(state.running){rr(25,405,196,36,10,'rgba(255,250,227,.92)','#e5d7ad');ctx.fillStyle='#526a54';ctx.font='bold 12px Trebuchet MS';ctx.fillText('Period '+state.completed+' / 10',39,427)}
-  }
-  function resetPhysics(){
-    state.theta=getAngle()*Math.PI/180;state.omega=0;state.simTime=0;state.running=false;state.paused=false;state.peakStart=null;state.completed=0;state.measuredElapsed=0;state.lastPeakAt=null;state.prevOmega=0;
-    $('periodCount').textContent='0 / 10';$('trialStatus').textContent='No trial running';startBtn.disabled=false;startBtn.textContent='▶ Release & measure 10 periods';setStatus('Ready when you are');
-  }
-  function startTrial(){
-    if(state.running)return;
-    state.theta=getAngle()*Math.PI/180;state.omega=0;state.simTime=0;state.running=true;state.paused=false;state.peakStart=null;state.completed=0;state.measuredElapsed=0;state.lastPeakAt=null;state.prevOmega=0;
-    state.trialLength=getLength();state.trialAngle=getAngle();state.trialMass=getMass();state.trialWind=getWind();state.trialNoise=getNoise();state.currentTrial=state.log.length+1;
-    $('periodCount').textContent='0 / 10';$('trialStatus').textContent='Waiting for first complete period…';startBtn.disabled=true;startBtn.textContent='⏳ Measuring…';setStatus('Counting complete swings');toast('Pendulum released. Keep watching the bob!');
-  }
-  function finishTrial(){
-    state.running=false;startBtn.disabled=false;startBtn.textContent='▶ Release & measure 10 periods';
-    const L=state.trialLength, ideal=idealPeriod(L);
-    // Measurement uncertainty includes reaction-time jitter, made more noticeable by the disturbance setting.
-    const noiseFactor=state.trialNoise/100;
-    const reactionError=(Math.random()-.5)*(.04+.20*noiseFactor);
-    const measured=Math.max(.1,(state.measuredElapsed+reactionError)/10);
-    const err=((measured-ideal)/ideal)*100;
-    const row={n:state.currentTrial,L,ideal,measured,err,angle:state.trialAngle,mass:state.trialMass,wind:state.trialWind,noise:state.trialNoise};state.log.unshift(row);if(state.log.length>8)state.log.length=8;
-    $('trialStatus').textContent='Trial complete';$('periodCount').textContent='10 / 10';setStatus('A new reading is in your notebook');
-    $('latestMetrics').className='';$('latestMetrics').innerHTML=`<div class="metrics"><div class="metric"><span>IDEAL PERIOD</span><strong>${ideal.toFixed(3)} s</strong></div><div class="metric"><span>MEASURED PERIOD</span><strong>${measured.toFixed(3)} s</strong></div><div class="metric"><span>PERCENT ERROR</span><strong>${Math.abs(err).toFixed(1)}%</strong></div></div><div class="results-empty">${Math.abs(err)<3?'Lovely work—the reading is close to the simple prediction.':'A difference is normal in this model. Check the breeze, vibration, and whether you changed more than one variable.'} Keep other settings steady when testing string length.</div>`;
-    $('logWrap').hidden=false;$('logBody').innerHTML=state.log.map(r=>`<tr><td>#${r.n}</td><td>${r.L.toFixed(2)} m</td><td>${r.ideal.toFixed(3)} s</td><td>${r.measured.toFixed(3)} s</td><td>${r.err>0?'+':''}${r.err.toFixed(1)}%</td></tr>`).join('');
-    toast('Reading recorded in your field notebook.');
-  }
-  function updatePhysics(dt){
-    if(!state.running)return;
-    const substeps=Math.max(1,Math.ceil(dt*SIM_SPEED/.008));const h=dt*SIM_SPEED/substeps;
-    const L=state.trialLength,massKg=state.trialMass/1000,wind=state.trialWind/100,noise=state.trialNoise/100;
-    for(let i=0;i<substeps;i++){
-      state.simTime+=h;
-      const windAccel=wind*.26*(.08/massKg)*Math.sin(state.simTime*1.6+.7);
-      const vibrationAccel=noise*.075*(Math.random()*2-1);
-      const damping=.012+noise*.018;
-      const alpha=-(9.81/L)*Math.sin(state.theta)-damping*state.omega+((windAccel+vibrationAccel)/L)*Math.cos(state.theta);
-      state.omega+=alpha*h;state.theta+=state.omega*h;
-      if(state.prevOmega>0 && state.omega<=0 && state.theta>0){
-        if(state.peakStart===null){state.peakStart=state.simTime;}
-        else {state.completed++;state.measuredElapsed=state.simTime-state.peakStart;state.peakStart=state.simTime;$('periodCount').textContent=state.completed+' / 10';$('trialStatus').textContent='Timing complete periods…';if(state.completed>=10){finishTrial();break}}
-      }
-      state.prevOmega=state.omega;
-    }
-  }
-  function interaction(){
-    if(Math.abs(state.playerX-470)<160){state.bubbleText='Let the bob tell its story.';state.bubbleUntil=performance.now()+2300; $('characterHint').textContent='The lab assistant says: let the bob tell its story.';toast('Try releasing the pendulum with Space.');}
-    else {state.bubbleText='What shall we discover today?';state.bubbleUntil=performance.now()+2300;$('characterHint').textContent='The assistant is ready for a new discovery.';}
-  }
-  window.addEventListener('keydown',(e)=>{
-    if(['ArrowLeft','ArrowRight',' ','a','d','A','D','e','E'].includes(e.key))e.preventDefault();
-    state.keys[e.key]=true;
-    if((e.key==='e'||e.key==='E')&&!e.repeat)interaction();
-    if(e.key===' '&&!e.repeat&&!state.running)startTrial();
-  });
-  window.addEventListener('keyup',(e)=>{state.keys[e.key]=false});
-  for(const key in controls){controls[key].addEventListener('input',()=>{refreshReadouts();if(!state.running){state.theta=getAngle()*Math.PI/180;state.omega=0;} });}
-  startBtn.addEventListener('click',startTrial);resetBtn.addEventListener('click',()=>{resetPhysics();state.theta=getAngle()*Math.PI/180;state.omega=0;setStatus('Fresh slate');toast('Experiment reset. Your previous notebook readings stay saved.');});
-  function frame(timestamp){
-    if(!state.lastTimestamp)state.lastTimestamp=timestamp;
-    const dt=clamp((timestamp-state.lastTimestamp)/1000,0,.04);state.lastTimestamp=timestamp;
-    const left=state.keys.ArrowLeft||state.keys.a||state.keys.A;const right=state.keys.ArrowRight||state.keys.d||state.keys.D;
-    if(left!==right){state.playerDirection=left?-1:1;state.playerX=clamp(state.playerX+(left?-105:105)*dt,45,290);}
-    if(timestamp-state.lastCharFrame>190){state.charFrame++;state.lastCharFrame=timestamp;}
-    updatePhysics(dt);drawScene(timestamp);requestAnimationFrame(frame);
-  }
-  refreshReadouts();resetPhysics();drawScene(0);requestAnimationFrame(frame);
-})();
-</script>
+
+<!-- Scripts (No-build vanilla modular scripts) -->
+<script src="js/physics.js"></script>
+<script src="js/character.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
